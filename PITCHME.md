@@ -12,9 +12,13 @@ Most view-components of current web apps are designer-unfriendly. This complicat
 
 #### HTML obscured by extensive display logic
 ```HTML
- <#if ((products?size % (columns * 2) > 0 && products?size % (columns * 2) <= columns - 1 )) && menuProperties?? && showBanner>
+ <#if ((products?size % (columns * 2) > 0 && products?size %
+  (columns * 2) <= columns - 1 )) && menuProperties?? &&
+  showBanner>
             <a href="/product">Product</a>
-<#elseif (isRowEven || (isRowUneven && (!menuProperties?? || !showBanner))) && product_has_next>
+<#elseif
+  (isRowEven || (isRowUneven && (!menuProperties?? ||
+   !showBanner))) && product_has_next>
             <hr class="line"/>
 </#if>
 ```
@@ -46,7 +50,7 @@ class Clock extends React.Component {
     return (
       <div>
         <h1>Hello, world!</h1>
-        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+        <h2>It is {this.state.date.toTimeString()}.</h2>
       </div>
     );
   }
@@ -127,7 +131,8 @@ This example uses [alive](https://github.com/lomin/alive), a selector-based (à 
 The following  either displays the answer with the  
 
 ```Clojure
-(me.lomin.alive.macros/deftemplate evermento-html "evermento.html")
+(me.lomin.alive.macros/deftemplate evermento-html
+"evermento.html")
 (me.lomin.alive.macros/import-id id#memo-container)
 (me.lomin.alive.macros/import-class _subcontainer)
 (me.lomin.alive.macros/import-class _answer)
@@ -176,10 +181,11 @@ The following  either displays the answer with the
 #### Example for unit test with alive
 ```Clojure
 (deftest ^:unit render-answer-test
-  (let [answer #(transform
-                 [evermento/id#memo-container evermento/_answer]
-                 evermento/render-answer)]
-    
+  (let [answer
+        #(transform
+           [evermento/id#memo-container evermento/_answer]
+           evermento/render-answer)]
+
     (testing "show answer"
       (evermento/assoc-in* [:show-answer] true)
       (evermento/assoc-in* [:answer] "A test answer.")
