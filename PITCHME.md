@@ -112,6 +112,7 @@ class Clock extends React.Component {
 #### Example
 
 Local static html file for large displays
+
 ![evermento_L](docs/evermento_L.png)
 
 #VSLIDE
@@ -127,8 +128,6 @@ Same html file for small displays
 #### Example of a DOM transformation
 
 This example uses [alive](https://github.com/lomin/alive), a selector-based (à la CSS) templating library for Clojure and ClojureScript
-
-The following  either displays the answer with the  
 
 ```Clojure
 (me.lomin.alive.macros/deftemplate evermento-html
@@ -196,5 +195,13 @@ The following  either displays the answer with the
       (evermento/assoc-in* [:show-answer] false)
       (is (= [:div {:class "answer hidden"} "A test answer."]
              (answer))))))
+```
+
+#HSLIDE
+
+#### Try alive
+
+```Clojure
+[me.lomin/alive "0.1.0"]
 ```
 
