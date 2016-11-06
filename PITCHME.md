@@ -170,10 +170,10 @@ This example uses [alive](https://github.com/lomin/alive), a selector-based (à 
 
 #### Why is that the solution?
 
- - Designers can use any tools they like and are used to <!-- .element: class="fragment" -->
- - No sophisticated build chain, preprocessors, etc. necessary <!-- .element: class="fragment" -->
- - Developers can use the full power and expressiveness of their language <!-- .element: class="fragment" -->
- - Easy to unit test  <!-- .element: class="fragment" -->
+ - Flexible: Designers can use any tools they like and are used to <!-- .element: class="fragment" -->
+ - Simple: No sophisticated build chain, preprocessors, etc. necessary <!-- .element: class="fragment" -->
+ - Powerful: Developers can use the full expressiveness of their language <!-- .element: class="fragment" -->
+ - Testable: Easy to unit test  <!-- .element: class="fragment" -->
 
 #VSLIDE
 
