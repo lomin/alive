@@ -1,16 +1,16 @@
 #HSLIDE
 
-## True Separation of  the V in MVC
+### True Separation of  the V in MVC
 
 #HSLIDE
 
-## What is the problem?
+#### What is the problem?
 
 Most view-components of current web apps are designer-unfriendly. This complicates the collaboration between designers and developers and hinders designers to leverage their area of expertise.
 
 #VSLIDE
 
-## HTML obscured by extensive display logic
+#### HTML obscured by extensive display logic
 ```HTML
  <#if ((products?size % (columns * 2) > 0 && products?size % (columns * 2) <= columns - 1 )) && menuProperties?? && showBanner>
             <a href="/product">Product</a>
@@ -21,7 +21,7 @@ Most view-components of current web apps are designer-unfriendly. This complicat
 
 #VSLIDE
 
-## HTML obscured by framework code 
+#### HTML obscured by framework code 
 
 ```JavaScript
 class Clock extends React.Component {
@@ -55,7 +55,7 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-## Visual verification impossible without special tools and/or running server
+#### Visual verification impossible without special tools and/or running server
 
 ```HTML
 <div ng-controller="Controller">
@@ -68,7 +68,7 @@ class Clock extends React.Component {
 
 #HSLIDE
 
-## Why is this a problem? I
+#### Why is this a problem? I
 
 "I am a full stack developer, I do not need a dedicated designer."
 
@@ -77,7 +77,7 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-## Why is this a problem? II
+#### Why is this a problem? II
 
 "Designers can hand over mockups or concept art and developers implement them."
 
@@ -87,7 +87,7 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-## Why is this a problem? III
+#### Why is this a problem? III
 
 "This is not a problem in our project, since we automated all the moving parts. All designers only have to install docker, set the right flags, pull the image, start the container, install npm, gulp, webpack, babel, yarn, react, redux ..."
 
@@ -96,7 +96,7 @@ class Clock extends React.Component {
 
 #HSLIDE
 
-## What is the solution?
+#### What is the solution?
 
 - Write static, pure HTML files.
 - Any dynamic parts are represented by placeholders.
@@ -105,14 +105,14 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-## Example
+#### Example
 
 Local static html file for large displays
 ![evermento_L](docs/evermento_L.png)
 
 #VSLIDE
 
-## Example
+#### Example
 
 Same html file for small displays
 
@@ -120,7 +120,7 @@ Same html file for small displays
 
 #VSLIDE
 
-## Example of a DOM transformation
+#### Example of a DOM transformation
 
 This example uses [alive](https://github.com/lomin/alive), a selector-based (à la CSS) templating library for Clojure and ClojureScript
 
@@ -164,7 +164,7 @@ The following  either displays the answer with the
 
 #HSLIDE
 
-## Why is that the solution?
+#### Why is that the solution?
 
  - Designers can use any tools they like and are used to <!-- .element: class="fragment" -->
  - No sophisticated build chain, preprocessors, etc. necessary <!-- .element: class="fragment" -->
@@ -173,7 +173,7 @@ The following  either displays the answer with the
 
 #VSLIDE
 
-## Example for unit test with alive
+#### Example for unit test with alive
 ```Clojure
 (deftest ^:unit render-answer-test
   (let [answer #(transform
