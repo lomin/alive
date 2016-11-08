@@ -1,6 +1,7 @@
 #HSLIDE
 
-### True Separation of  the V in MVC
+### True Separation of the V
+### in MVC
 
 #HSLIDE
 
@@ -62,8 +63,10 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-#### Visual verification impossible without running server or shipping test data (plus underpowered templates)
-
+#### Visual verification impossible
+- without running server <!-- .element: class="fragment" -->
+- shipping test data  <!-- .element: class="fragment" -->
+- (plus [underpowered templates](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html))  <!-- .element: class="fragment" -->
 ```HTML
 <div ng-app=""
      ng-init="vals=['Potential','Long','Testdata']">
@@ -82,8 +85,8 @@ class Clock extends React.Component {
 
 "I am a full stack developer, I do not need a dedicated designer."
 
-- While certainly possible, being excellent on two somewhat unrelated skills like UX/UI design and clean coding is rare.       <!-- .element: class="fragment" -->
-- When working on the layout and structure of a website, one profits of the bounded context between designing and coding.      <!-- .element: class="fragment" -->
+- Being excellent on all levels is really hard.   <!-- .element: class="fragment" -->
+- A bounded context is still beneficial.   <!-- .element: class="fragment" -->
 
 #VSLIDE
 
@@ -91,9 +94,9 @@ class Clock extends React.Component {
 
 "Designers can hand over mockups or concept art and developers implement them."
 
-- Designers can iterate directly in HTML and get feedback immediately.       <!-- .element: class="fragment" -->
-- Less waste gets produced. There are no throw away design artefacts.    <!-- .element: class="fragment" -->
-- Designers and developers work with each other, not one for the other. This result in less misunderstandings.  <!-- .element: class="fragment" -->
+- In this way, designers produce throw away artefacts. <!-- .element: class="fragment" -->
+- Designers could instead iterate directly in HTML and get feedback immediately.    <!-- .element: class="fragment" -->
+- This kind of collaboration will boost misunderstandings.  <!-- .element: class="fragment" -->
 
 #VSLIDE
 
@@ -102,7 +105,7 @@ class Clock extends React.Component {
 "This is not a problem in our project, since we automated all the moving parts. All designers only have to install docker, set the right flags, pull the image, start the container, install npm, gulp, webpack, babel, yarn, react, redux ..."
 
 - Every additional tool makes the whole development process a little more brittle. <!-- .element: class="fragment" -->
-- The direction of the dependency is wrong. Development should simplify the design process, not complicate it. <!-- .element: class="fragment" -->
+- Development should simplify the design process, not complicate it. <!-- .element: class="fragment" -->
 
 #HSLIDE
 
