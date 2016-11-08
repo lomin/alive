@@ -67,7 +67,7 @@ class Clock extends React.Component {
 #### Visual verification impossible
 - without running server <!-- .element: class="fragment" -->
 - shipping test data  <!-- .element: class="fragment" -->
-- (plus [underpowered templates](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html))  <!-- .element: class="fragment" -->
+- <!-- .element: class="fragment" -->(plus [underpowered templates](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html))  
 ```HTML
 <div ng-app=""
      ng-init="vals=['Potential','Long','Testdata']">
