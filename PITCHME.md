@@ -9,13 +9,15 @@
 #### What is the problem?
 
 Most view-components of current web apps ...
-- ... are designer-unfriendly <!-- .element: class="fragment" -->
-- ... impede the collaboration between designers and developers <!-- .element: class="fragment" -->
-- ... hinder designer to leverage their skills <!-- .element: class="fragment" -->
+
+ 1. ... impede the collaboration between designers and developers  <!-- .element: class="fragment" -->
+ 2. ... make it difficult for designers to contribute in the same way as developers  <!-- .element: class="fragment" -->
+ 3. ... hinder designer to leverage their skills  <!-- .element: class="fragment" -->
 
 #VSLIDE
 
-#### HTML obscured by extensive display logic
+####  ... impede the collaboration between designers and developers
+Example: No collaboration on the same artifacts
 ```HTML
  <#if ((products?size % (columns * 2) > 0 && products?size %
   (columns * 2) <= columns - 1 )) && menuProperties?? &&
@@ -30,7 +32,8 @@ Most view-components of current web apps ...
 
 #VSLIDE
 
-#### HTML obscured by framework code 
+####  ... make it difficult for designers to contribute in the same way as developers
+Example: "React makes it easy for designers to contribute." That is wishful thinking.
 
 ```JavaScript
 class Clock extends React.Component {
@@ -64,9 +67,10 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-#### Visual verification impossible
+#### ... hinder designer to leverage their skills
+Example: Visual verification impossible
 - without running server <!-- .element: class="fragment" -->
-- shipping test data  <!-- .element: class="fragment" -->
+- or shipping test data  <!-- .element: class="fragment" -->
 - <!-- .element: class="fragment" -->(plus [underpowered templates](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html))  
 ```HTML
 <div ng-app=""
@@ -95,7 +99,7 @@ class Clock extends React.Component {
 
 "Designers can hand over mockups or concept art and developers implement them."
 
-- In this way, designers produce throw away artefacts. <!-- .element: class="fragment" -->
+- In this way, designers produce throw away artifacts. <!-- .element: class="fragment" -->
 - Designers could instead iterate directly in HTML and get feedback immediately.    <!-- .element: class="fragment" -->
 - This kind of collaboration will boost misunderstandings.  <!-- .element: class="fragment" -->
 
