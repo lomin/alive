@@ -112,10 +112,10 @@ class Clock extends React.Component {
 
 #### What is the solution?
 
-- Write static, pure HTML files. <!-- .element: class="fragment" -->
-- Any dynamic parts are represented by placeholders. <!-- .element: class="fragment" -->
-- Add all elements that are displayed eventually. <!-- .element: class="fragment" -->
-- Transformations of the DOM with the actual values, depending on the app state, are either applied on the server or on the client-side. <!-- .element: class="fragment" -->
+- Write static, pure HTML files.     <!-- .element: class="fragment" -->
+- Any dynamic parts are represented by placeholders.     <!-- .element: class="fragment" -->
+- Add all elements that are displayed eventually.     <!-- .element: class="fragment" -->
+- Transformations of the DOM with the actual values, depending on the app state, are either applied on the server or on the client-side.     <!-- .element: class="fragment" -->
 
 #VSLIDE
 
