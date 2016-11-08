@@ -1,6 +1,7 @@
 #HSLIDE
 
-### True Separation of the V
+### True Separation of
+### V
 ### in MVC
 
 #HSLIDE
