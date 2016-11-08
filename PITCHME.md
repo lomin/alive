@@ -6,7 +6,10 @@
 
 #### What is the problem?
 
-Most view-components of current web apps are designer-unfriendly. This complicates the collaboration between designers and developers and hinders designers to leverage their area of expertise.
+Most view-components of current web apps ...
+- ... are designer-unfriendly <!-- .element: class="fragment" -->
+- ... impede the collaboration between designers and developers <!-- .element: class="fragment" -->
+- ... hinder designer to leverage their skills <!-- .element: class="fragment" -->
 
 #VSLIDE
 
@@ -59,16 +62,19 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-#### Visual verification impossible without special tools and/or running server
+#### Visual verification impossible without running server or shipping test data (plus underpowered templates)
 
 ```HTML
-<div ng-controller="Controller">
-  Hello <input ng-model='name'> <hr/>
-  <span ng-bind="name"></span> <br/>
+<div ng-app=""
+     ng-init="vals=['Potential','Long','Testdata']">
+  <p>Looping with ng-repeat:</p>
+  <ul>
+    <li ng-repeat="x in vals">
+      {{ x }}
+    </li>
+  </ul>
 </div>
 ```
-
-![Angular](docs/angular.png)
 
 #HSLIDE
 
@@ -122,6 +128,14 @@ Local static html file for large displays
 Same html file for small displays
 
 ![evermento_S](docs/evermento_S.png)
+
+#VSLIDE
+
+#### DOM transformations
+
+```Haskell
+transform-dom :: [Selector] -> (DOM -> DOM) -> DOM -> DOM
+```
 
 #VSLIDE
 
