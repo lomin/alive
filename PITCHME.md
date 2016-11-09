@@ -12,7 +12,7 @@ Most view-components of current web apps ...
 
  1. ... impede the collaboration between designers and developers  <!-- .element: class="fragment" -->
  2. ... make it difficult for designers to contribute in the same way as developers  <!-- .element: class="fragment" -->
- 3. ... hinder designer to leverage their skills  <!-- .element: class="fragment" -->
+ 3. ... hinder designers to leverage their skills  <!-- .element: class="fragment" -->
 
 #VSLIDE
 
@@ -67,11 +67,8 @@ class Clock extends React.Component {
 
 #VSLIDE
 
-#### ... hinder designer to leverage their skills
+#### ... hinder designers to leverage their skills
 Example: Visual verification impossible
-- without running server <!-- .element: class="fragment" -->
-- or shipping test data  <!-- .element: class="fragment" -->
-- <!-- .element: class="fragment" -->(plus [underpowered templates](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html))  
 ```HTML
 <div ng-app=""
      ng-init="vals=['Potential','Long','Testdata']">
@@ -83,6 +80,9 @@ Example: Visual verification impossible
   </ul>
 </div>
 ```
+- without running server <!-- .element: class="fragment" -->
+- or shipping test data  <!-- .element: class="fragment" -->
+- <!-- .element: class="fragment" -->(plus [underpowered templates](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html))  
 
 #HSLIDE
 
