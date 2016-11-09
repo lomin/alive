@@ -142,7 +142,7 @@ Same html file for small displays
 #### DOM transformations
 
 ```Haskell
-transform-dom :: [Selector] -> (DOM -> DOM) -> DOM -> DOM
+transform :: [Selector] -> (AppState -> DOM -> DOM) -> DOM -> DOM
 ```
 
 #VSLIDE
