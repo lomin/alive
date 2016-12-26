@@ -1,7 +1,6 @@
 (ns me.lomin.alive.macros
   (:require [hickory.core :as h]
-            [com.rpl.specter :as s]
-            [com.rpl.specter.macros :as sm]))
+            [com.rpl.specter :as s]))
 
 (defn trim-html [s]
   (-> s
@@ -33,38 +32,31 @@
 (defmacro deftemplate [sym path]
   `(def ~sym ~(get-hiccup-from-path (as-path-str path))))
 
-(defmacro import-attrs [attrs-name]
-  `(do
-     (sm/declarepath ~attrs-name)
-     (sm/providepath ~attrs-name [(s/srange 1 2) s/FIRST])))
-
-(import-attrs attrs)
-
 (defmacro import-tag [selector]
   (let [selector-keyword (keyword selector)]
     `(do
-       (sm/declarepath ~selector)
-       (sm/providepath ~selector
-                       (s/if-path sequential?
-                                  (s/if-path [s/FIRST #(= ~selector-keyword %)]
-                                             (s/continue-then-stay s/ALL ~selector)
-                                             [s/ALL ~selector]))))))
+       (s/declarepath ~selector)
+       (s/providepath ~selector
+                      (s/if-path sequential?
+                                 (s/if-path [s/FIRST #(= ~selector-keyword %)]
+                                            (s/continue-then-stay s/ALL ~selector)
+                                            [s/ALL ~selector]))))))
 (defmacro import-class [selector]
   (let [class-name (apply str (rest (name selector)))]
     `(do
-       (sm/declarepath ~selector)
-       (sm/providepath ~selector
-                       (s/if-path sequential?
-                                  (s/if-path [#(some #{~class-name}
-                                                     (clojure.string/split (str (:class (second %))) #" "))]
-                                             (s/continue-then-stay s/ALL ~selector)
-                                             [s/ALL ~selector]))))))
+       (s/declarepath ~selector)
+       (s/providepath ~selector
+                      (s/if-path sequential?
+                                 (s/if-path [#(some #{~class-name}
+                                                    (clojure.string/split (str (:class (second %))) #" "))]
+                                            (s/continue-then-stay s/ALL ~selector)
+                                            [s/ALL ~selector]))))))
 (defmacro import-id [selector]
   (let [id-name (apply str (drop 3 (name selector)))]
     `(do
-       (sm/declarepath ~selector)
-       (sm/providepath ~selector
-                       (s/if-path sequential?
-                                  (s/if-path [#(= ~id-name (str (:id (second %))))]
-                                             (s/continue-then-stay s/ALL ~selector)
-                                             [s/ALL ~selector]))))))
+       (s/declarepath ~selector)
+       (s/providepath ~selector
+                      (s/if-path sequential?
+                                 (s/if-path [#(= ~id-name (str (:id (second %))))]
+                                            (s/continue-then-stay s/ALL ~selector)
+                                            [s/ALL ~selector]))))))
