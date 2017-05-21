@@ -5,6 +5,10 @@
 
 #?(:clj
    (do
+     (deftype MapKeySelector [k]
+       clojure.lang.IDeref
+       (deref [self] k))
+
      (defn- trim-html [s]
        (-> s
            (clojure.string/replace #"\s\s+" " ")
@@ -28,6 +32,11 @@
                             (eval path))
                           (clojure.java.io/resource))))))
 
+#?(:cljs
+   (deftype MapKeySelector [k]
+     IDeref
+     (-deref [self] k)))
+
 (def html-selector
   (s/recursive-path [path]
                     p
@@ -36,8 +45,15 @@
                                           (s/continue-then-stay s/ALL p)
                                           [s/ALL p]))))
 
+(def TAG 0)
+(def ATTRS 1)
+
+(defn map-key [k]
+  (MapKeySelector. k))
+
 (defn make-selector [selector]
-  (if (keyword? selector)
+  (cond
+    (keyword? selector)
     (let [selector-name (name selector)
           first-char (first selector-name)]
       (cond
@@ -50,18 +66,22 @@
                              (some #{class-name}
                                    (clojure.string/split class-str #" ")))]))
         :else (html-selector [s/FIRST #(= selector %)])))
-    selector))
+    (number? selector) (s/nthpath selector)
+    (= MapKeySelector (type selector)) @selector
+    :else selector))
 
 (defn make-path [path]
   (mapv make-selector path))
-
-(defn make-snippet [template]
-  (s/select-first (make-path [:body (s/nthpath 2)]) template))
 
 (defn- make-set-from-str [class-str]
   (if class-str
     (set (clojure.string/split class-str #" "))
     #{}))
+
+(defn add-content
+  ([content] #(add-content content %))
+  ([content node]
+   (conj node content)))
 
 (defn replace-content
   ([content] #(replace-content content %))
@@ -69,14 +89,14 @@
    (into [(first node) (second node)] content)))
 
 (defn remove-attr [k node]
-  (update node 1 dissoc k))
+  (update node ATTRS dissoc k))
 
 (defn update-attr [& args]
-  (apply update (last args) 1 (drop-last args)))
+  (apply update (last args) ATTRS (drop-last args)))
 
 (defn update-classes [f node]
   (update-in node
-             [1 :class]
+             [ATTRS :class]
              (comp #(clojure.string/join " " (sort (vec %)))
                    f
                    make-set-from-str)))
@@ -94,9 +114,30 @@
 (defn contains-class?
   ([a-class] #(contains-class? a-class %))
   ([a-class node]
-   (contains? (make-set-from-str (get-in node [1 :class])) a-class)))
+   (contains? (make-set-from-str (get-in node [ATTRS :class])) a-class)))
 
 (defn set-listener
   ([event f] #(set-listener event f %))
   ([event f node]
    (update-attr assoc event f node)))
+
+(defn- make-component* [& args]
+  (vec args))
+
+(defn make-component [& args]
+  (apply partial make-component* args))
+
+(defn- transform* [dom [raw-path transformation]]
+  (s/transform (make-path raw-path)
+               transformation
+               dom))
+
+(defn transform [dom & args]
+  (if (not (even? (count args)))
+    [:p {} "FAIL: uneven path-transformation-pairs to transform"]
+    (reduce transform* dom (partition 2 args))))
+
+(defn select-snippet [selector dom]
+  (s/select-first
+    (make-path selector)
+    dom))

@@ -5,7 +5,9 @@ pom.xml.asc
 /lib/
 /classes/
 /target/
-/out/
+examples/simple/target
+examples/simple/resources/public/js
+out/
 /checkouts/
 .lein-deps-sum
 .lein-repl-history

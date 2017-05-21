@@ -9,9 +9,9 @@
 
 (def template (alive/load-template-from-path "html-snippet.html"))
 
-(deftest ^:unit to-snippet-test
+(deftest ^:unit select-snippet-test
   (is (= [:div {} [:p {} "I am a snippet!"]]
-         (alive/make-snippet template))))
+         (alive/select-snippet [:div] template))))
 
 (deftest ^:unit add-class-test
   (is (= [:div {:class "c0 c1 c2 c3"}]
@@ -72,3 +72,19 @@
          (time (s/transform (alive/make-path [:article :.question])
                             (alive/add-class "new-class")
                             test-article)))))
+
+(deftest ^:unit transform-test
+  (is (= [:article
+          {:id "Question1"}
+          [:div {:class "new-class0 new-class1 question"} " e.hmtl Q1 "]
+          [:div {:class "answer new-class2 new-class3"} " e.hmtl A1 "]]
+         (alive/transform test-article
+                          [:.question] (comp (alive/add-class "new-class0")
+                                             (alive/add-class "new-class1"))
+                          [:.answer] (comp (alive/add-class "new-class2")
+                                           (alive/add-class "new-class3")))))
+  (testing "transforms within nested structures"
+    (is (= [:div {:class "question", :l0 {:l1 2}} "test"]
+           (alive/transform
+             [:div {:class "question" :l0 {:l1 1}} "test"]
+             [:.question alive/ATTRS (alive/map-key :l0) (alive/map-key :l1)] inc)))))
