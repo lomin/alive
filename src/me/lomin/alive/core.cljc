@@ -1,13 +1,11 @@
 (ns me.lomin.alive.core
-  (:require [com.rpl.specter :as s]
-            [hickory.core :as h])
+  (:require [me.lomin.alive.html :as html]
+            [com.rpl.specter :as specter]
+            [hickory.core :as hickory])
   #?(:cljs (:require-macros me.lomin.alive.core)))
 
 #?(:clj
    (do
-     (deftype MapKeySelector [k]
-       clojure.lang.IDeref
-       (deref [self] k))
 
      (defn- trim-html [s]
        (-> s
@@ -19,8 +17,8 @@
              (trim-html (apply str
                                (map clojure.string/trim-newline
                                     (line-seq rdr)))))
-           (h/parse)
-           (h/as-hiccup)
+           (hickory/parse)
+           (hickory/as-hiccup)
            (vec)))
 
      (defmacro load-template-from-resource [resource]
@@ -32,28 +30,18 @@
                             (eval path))
                           (clojure.java.io/resource))))))
 
-#?(:cljs
-   (deftype MapKeySelector [k]
-     IDeref
-     (-deref [self] k)))
-
 (def html-selector
-  (s/recursive-path [path]
-                    p
-                    (s/if-path sequential?
-                               (s/if-path path
-                                          (s/continue-then-stay s/ALL p)
-                                          [s/ALL p]))))
-
-(def TAG 0)
-(def ATTRS 1)
-
-(defn map-key [k]
-  (MapKeySelector. k))
+  (specter/recursive-path [path]
+                          p
+                          (specter/if-path sequential?
+                                           (specter/if-path path
+                                                            (specter/continue-then-stay specter/ALL p)
+                                                            [specter/ALL p]))))
 
 (defn make-selector [selector]
   (cond
-    (keyword? selector)
+    (and (keyword? selector)
+         (= "me.lomin.alive.html" (namespace selector)))
     (let [selector-name (name selector)
           first-char (first selector-name)]
       (cond
@@ -65,10 +53,12 @@
           (html-selector [#(if-let [class-str (:class (second %))]
                              (some #{class-name}
                                    (clojure.string/split class-str #" ")))]))
-        :else (html-selector [s/FIRST #(= selector %)])))
-    (number? selector) (s/nthpath selector)
-    (= MapKeySelector (type selector)) @selector
+        :else (html-selector [specter/FIRST #(= (keyword selector-name) %)])))
+    (number? selector) (specter/nthpath selector)
     :else selector))
+
+(defn not-selected? [selector]
+  (specter/not-selected? (make-selector selector)))
 
 (defn make-path [path]
   (mapv make-selector path))
@@ -88,15 +78,19 @@
   ([content node]
    (into [(first node) (second node)] content)))
 
+(defn remove-content
+  ([node]
+   [(first node) (second node)]))
+
 (defn remove-attr [k node]
-  (update node ATTRS dissoc k))
+  (update node html/ATTRS dissoc k))
 
 (defn update-attr [& args]
-  (apply update (last args) ATTRS (drop-last args)))
+  (apply update (last args) html/ATTRS (drop-last args)))
 
 (defn update-classes [f node]
   (update-in node
-             [ATTRS :class]
+             [html/ATTRS :class]
              (comp #(clojure.string/join " " (sort (vec %)))
                    f
                    make-set-from-str)))
@@ -114,30 +108,53 @@
 (defn contains-class?
   ([a-class] #(contains-class? a-class %))
   ([a-class node]
-   (contains? (make-set-from-str (get-in node [ATTRS :class])) a-class)))
+   (contains? (make-set-from-str (get-in node [html/ATTRS :class])) a-class)))
 
 (defn set-listener
   ([event f] #(set-listener event f %))
   ([event f node]
    (update-attr assoc event f node)))
 
-(defn- make-component* [& args]
-  (vec args))
-
 (defn make-component [& args]
-  (apply partial make-component* args))
+  #(conj (vec args) %))
 
-(defn- transform* [dom [raw-path transformation]]
-  (s/transform (make-path raw-path)
-               transformation
-               dom))
+(defn- do-transform [dom [raw-path transformation]]
+  (specter/transform (make-path raw-path)
+                     transformation
+                     dom))
 
-(defn transform [dom & args]
-  (if (not (even? (count args)))
-    [:p {} "FAIL: uneven path-transformation-pairs to transform"]
-    (reduce transform* dom (partition 2 args))))
+(defn- pairs
+  ([args] (pairs [] nil args))
+  ([pairs spare args]
+   (if-let [x0 (first args)]
+     (if-let [x1 (second args)]
+       (recur (conj pairs [x0 x1]) spare (nnext args))
+       [pairs x0])
+     [pairs spare])))
 
-(defn select-snippet [selector dom]
-  (s/select-first
-    (make-path selector)
-    dom))
+(defn transform* [transformations dom]
+  (reduce do-transform dom transformations))
+
+(defn transform [& args]
+  (let [[transformations dom] (pairs args)]
+    (if dom
+      (reduce do-transform dom transformations)
+      #(reduce do-transform % transformations))))
+
+(defn filter-sub-states [state pairs]
+  (specter/select [(specter/filterer specter/FIRST #(clojure.set/subset? % state))
+                   specter/ALL
+                   specter/LAST]
+                  pairs))
+
+(defn chain-fns [x f] (f x))
+
+(defn choose-state [state & args]
+  (let [[state-to-transformer-pairs dom] (pairs args)
+        transformers (filter-sub-states state state-to-transformer-pairs)]
+    (if dom
+      (reduce chain-fns dom transformers)
+      #(reduce chain-fns % transformers))))
+
+(defn select [selector dom]
+  (specter/select-first (make-path selector) dom))

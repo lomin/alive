@@ -7,6 +7,8 @@ pom.xml.asc
 /target/
 examples/simple/target
 examples/simple/resources/public/js
+examples/todomvc/target
+examples/todomvc/resources/public/js
 out/
 /checkouts/
 .lein-deps-sum

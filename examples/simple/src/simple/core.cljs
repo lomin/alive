@@ -1,6 +1,7 @@
 (ns simple.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as rf]
+            [me.lomin.alive.html :as html]
             [me.lomin.alive.core :as alive]))
 
 
@@ -9,7 +10,7 @@
 (defn dispatch-timer-event
   []
   (let [now (js/Date.)]
-    (rf/dispatch [:timer now])))  ;; <-- dispatch used
+    (rf/dispatch [:timer now])))                            ;; <-- dispatch used
 
 ;; Call the dispatching function every second.
 ;; `defonce` is like `def` but it ensures only instance is ever
@@ -19,30 +20,30 @@
 
 ;; -- Domino 2 - Event Handlers -----------------------------------------------
 
-(rf/reg-event-db              ;; sets up initial application state
-  :initialize                 ;; usage:  (dispatch [:initialize])
-  (fn [_ _]                   ;; the two parameters are not important here, so use _
-    {:time (js/Date.)         ;; What it returns becomes the new application state
-     :time-color "#f88"}))    ;; so the application state will initially be a map with two keys
+(rf/reg-event-db                                            ;; sets up initial application state
+  :initialize                                               ;; usage:  (dispatch [:initialize])
+  (fn [_ _]                                                 ;; the two parameters are not important here, so use _
+    {:time       (js/Date.)                                 ;; What it returns becomes the new application state
+     :time-color "#f88"}))                                  ;; so the application state will initially be a map with two keys
 
 
-(rf/reg-event-db                ;; usage:  (dispatch [:time-color-change 34562])
-  :time-color-change            ;; dispatched when the user enters a new colour into the UI text field
-  (fn [db [_ new-color-value]]  ;; -db event handlers given 2 parameters:  current application state and event (a vector)
-    (assoc db :time-color new-color-value)))   ;; compute and return the new application state
+(rf/reg-event-db                                            ;; usage:  (dispatch [:time-color-change 34562])
+  :time-color-change                                        ;; dispatched when the user enters a new colour into the UI text field
+  (fn [db [_ new-color-value]]                              ;; -db event handlers given 2 parameters:  current application state and event (a vector)
+    (assoc db :time-color new-color-value)))                ;; compute and return the new application state
 
 
-(rf/reg-event-db                 ;; usage:  (dispatch [:timer a-js-Date])
-  :timer                         ;; every second an event of this kind will be dispatched
-  (fn [db [_ new-time]]          ;; note how the 2nd parameter is destructured to obtain the data value
-    (assoc db :time new-time)))  ;; compute and return the new application state
+(rf/reg-event-db                                            ;; usage:  (dispatch [:timer a-js-Date])
+  :timer                                                    ;; every second an event of this kind will be dispatched
+  (fn [db [_ new-time]]                                     ;; note how the 2nd parameter is destructured to obtain the data value
+    (assoc db :time new-time)))                             ;; compute and return the new application state
 
 
 ;; -- Domino 4 - Query  -------------------------------------------------------
 
 (rf/reg-sub
   :time
-  (fn [db _]     ;; db is current app state. 2nd unused param is query vector
+  (fn [db _]                                                ;; db is current app state. 2nd unused param is query vector
     (-> db
         :time)))
 
@@ -56,37 +57,40 @@
 
 (defn clock
   [dom]
-  (alive/transform dom
-                   [:.example-clock alive/ATTRS (alive/map-key :style) (alive/map-key :color)]
-                   (constantly @(rf/subscribe [:time-color]))
-                   [:.example-clock]
-                   (alive/replace-content (-> @(rf/subscribe [:time])
-                                              .toTimeString
-                                              (clojure.string/split " ")
-                                              first))))
+  (alive/transform [::html/.example-clock]
+                   (alive/transform []
+                                    (alive/replace-content [(-> @(rf/subscribe [:time])
+                                                                .toTimeString
+                                                                (clojure.string/split " ")
+                                                                first)])
+                                    [html/ATTRS :style :color]
+                                    (constantly @(rf/subscribe [:time-color])))
+                   dom))
 
 (defn color-input
   [dom]
-  (alive/transform dom
-                   [:input alive/ATTRS (alive/map-key :value)]
-                   (constantly @(rf/subscribe [:time-color]))
-                   [:input]
-                   (alive/set-listener :on-change #(rf/dispatch [:time-color-change (-> % .-target .-value)]))))
+  (alive/transform [::html/input]
+                   (alive/transform []
+                                    (alive/set-listener :on-change
+                                                        #(rf/dispatch [:time-color-change (-> % .-target .-value)]))
+                                    [html/ATTRS :value]
+                                    (constantly @(rf/subscribe [:time-color])))
+                   dom))
 
 (defn ui
   [dom]
-  (alive/transform dom
-                   [:.example-clock]
+  (alive/transform [::html/.example-clock]
                    (alive/make-component clock)
-                   [:.color-input]
-                   (alive/make-component color-input)))
+                   [::html/.color-input]
+                   (alive/make-component color-input)
+                   dom))
 
 ;; -- Entry Point -------------------------------------------------------------
 
 (defn ^:export run
   []
   (rf/dispatch-sync [:initialize])                          ;; puts a value into application state
-  (reagent/render [ui (alive/select-snippet [:#app]         ;; mount the application's ui into '<div id="app" />'
-                                            (alive/load-template-from-path "public/example.html"))]
+  (reagent/render [ui (alive/select [::html/#app]           ;; mount the application's ui into '<div id="app" />'
+                                    (alive/load-template-from-path "public/example.html"))]
                   (js/document.getElementById "app")))
 
