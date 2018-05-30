@@ -1,11 +1,30 @@
 (ns me.lomin.alive.core
   (:require [me.lomin.alive.html :as html]
+            [me.lomin.alive.reload]
             [com.rpl.specter :as specter]
-            [hickory.core :as hickory])
+            [hickory.core :as hickory]
+            [clojure.string :as string]
+            [clojure.walk :as walk])
   #?(:cljs (:require-macros me.lomin.alive.core)))
 
 #?(:clj
    (do
+
+     (defn- react-prop? [prop]
+       (first (filter (comp (partial = prop)
+                            keyword
+                            string/lower-case)
+                      html/props)))
+
+     (defn- to-camel-prop [prop]
+       (if (keyword? prop)
+         (if-let [p (react-prop? prop)]
+           (keyword p)
+           prop)
+         prop))
+
+     (defn- html->react [dom]
+       (walk/postwalk to-camel-prop dom))
 
      (defn- trim-html [s]
        (-> s
@@ -19,7 +38,9 @@
                                     (line-seq rdr)))))
            (hickory/parse)
            (hickory/as-hiccup)
-           (vec)))
+           (vec)
+           ;(html->react)
+           ))
 
      (defmacro load-template-from-resource [resource]
        `~(load-hiccup resource))
@@ -156,5 +177,21 @@
       (reduce chain-fns dom transformers)
       #(reduce chain-fns % transformers))))
 
+; Convert to macro? Then it would be executed at compile-time.
+; BUT: def is a macro, so it would be executed at compile-time nevertheless?
+; TODO: Check app-size if either defn or macro
 (defn select [selector dom]
   (specter/select-first (make-path selector) dom))
+
+(defn select-all [selector dom]
+  (specter/select (make-path selector) dom))
+
+(defn translate
+  ([src dest] (translate src dest identity))
+  ([src dest f]
+   (fn [attrs]
+     (as-> attrs $
+           (assoc $ dest (f (src $)))
+           (dissoc $ src)))))
+
+#?(:cljs (goog-define DEV false))

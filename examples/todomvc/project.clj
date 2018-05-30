@@ -1,37 +1,40 @@
-(defproject todomvc "1.1.0"
-  :dependencies [[org.clojure/clojure "1.9.0-alpha16"]
-                 [org.clojure/clojurescript  "1.9.542"]
+(defproject me.lomin.alive.todomvc "1.1.0"
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.10.238"]
+                 [com.rpl/specter "1.1.1"]
                  [reagent  "0.6.2"]
-                 [re-frame "0.9.3"]
-                 [com.rpl/specter "1.0.1"]
+                 [re-frame "0.10.5"]
                  [hickory "0.7.1"]
                  [binaryage/devtools "0.8.1"]
-                 [secretary "1.2.3"]]
+                 [secretary "1.2.3"]
+                 [hawk "0.2.11"]
+                 [me.lomin.spectree "0.1.0"]]
 
-  :plugins [[lein-cljsbuild "1.1.6"]
-            [lein-figwheel  "0.5.10"]]
+  :plugins [[lein-figwheel "0.5.16"]]
 
-  :hooks [leiningen.cljsbuild]
-
-  :source-paths ["src" "../../src"]
+  :source-paths [".alive" "src" "../../src"]
 
   :profiles {:dev {:cljsbuild
-                   {:builds {:client {:figwheel     {:on-jsload "todomvc.core/main"}
-                                      :compiler     {:main "todomvc.core"
-                                                     :asset-path "js"
+                   {:builds {:client {:compiler     {:asset-path "js"
                                                      :optimizations :none
                                                      :source-map true
-                                                     :source-map-timestamp true}}}}}
+                                                     :source-map-timestamp true
+                                                     :main "todomvc.core"
+                                                     :closure-defines {"me.lomin.alive.core.DEV" true}}
+                                      :figwheel     {:on-jsload "todomvc.core/main"}}}}}
 
              :prod {:cljsbuild
                     {:builds {:client {:compiler    {:optimizations :advanced
                                                      :elide-asserts true
                                                      :pretty-print false}}}}}}
 
-  :figwheel {:repl false}
+  :figwheel {:server-port 3450
+             :repl        true}
 
-  :clean-targets ^{:protect false} ["resources/public/js"]
+  :clean-targets ^{:protect false} ["resources/public/js" "target"]
 
-  :cljsbuild {:builds {:client {:source-paths ["src"]
+  :cljsbuild {:builds {:client {:source-paths ["src" ".alive"]
                                 :compiler     {:output-dir "resources/public/js"
-                                               :output-to  "resources/public/js/client.js"}}}})
+                                               :output-to  "resources/public/js/client.js"}}}}
+
+  :main me.lomin.alive.watcher)

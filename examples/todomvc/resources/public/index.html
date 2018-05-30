@@ -1,94 +1,18 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html>
+  <head>
     <meta charset="utf-8">
     <title>Reframe Todomvc</title>
-    <link rel="stylesheet" href="base.css">
-    <link rel="stylesheet" href="index.css">
-</head>
-<body>
-<div id="app">
-
-    <section class="todoapp">
-        <header class="header">
-            <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done?" readonly name="newTodo">
-        </header>
-        <section class="main">
-            <input id="toggle-all" class="toggle-all" type="checkbox" name="toggle">
-            <label for="toggle-all">Mark all as complete</label>
-            <ul class="todo-list">
-                <li class="">
-                    <div class="view">
-                        <input class="toggle" type="checkbox">
-                        <label>todo</label>
-                        <button class="destroy"></button>
-                    </div>
-                    <input class="edit" name="title" id="todo-1"></li>
-            </ul>
-        </section>
-        <footer class="footer"><span class="todo-count"><strong>1</strong> item left</span>
-            <ul class="filters">
-                <li><a data-query="showing-all" class="selected" href="#/">All</a></li>
-                <li><a data-query="showing-active" class="" href="#/active">Active</a></li>
-                <li><a data-query="showing-done" class="" href="#/completed">Completed</a></li>
-            </ul>
-            <button class="clear-completed">Clear completed (1)</button>
-        </footer>
-    </section>
-
-    <section class="todoapp">
-        <header class="header">
-            <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done?" autofocus="" name="newTodo">
-        </header>
-        <section class="main">
-            <input id="toggle-all" checked class="toggle-all" type="checkbox" name="toggle">
-            <ul class="todo-list">
-                <li class="completed ">
-                    <div class="view">
-                        <input class="toggle" type="checkbox">
-                        <label>done</label>
-                        <button class="destroy"></button>
-                    </div>
-                    <input class="edit" name="title" id="todo-0"></li>
-            </ul>
-        </section>
-        <footer class="footer"><span class="todo-count"><strong>1</strong> item left</span>
-            <ul class="filters">
-                <li><a class="" href="#/">All</a></li>
-                <li><a class="" href="#/active">Active</a></li>
-                <li><a class="selected" href="#/completed">Completed</a></li>
-            </ul>
-        </footer>
-    </section>
-
-    <section id="no-todos" class="todoapp">
-        <header class="header">
-            <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done?" autofocus="" name="newTodo">
-        </header>
-        <section class="main">
-            <input id="toggle-all" class="toggle-all" type="checkbox" name="toggle">
-            <ul class="todo-list">
-
-            </ul>
-        </section>
-        <footer class="footer"><span class="todo-count"><strong>0</strong> items left</span>
-            <ul class="filters">
-                <li><a class="" href="#/">All</a></li>
-                <li><a class="selected" href="#/active">Active</a></li>
-                <li><a class="" href="#/completed">Completed</a></li>
-            </ul>
-            <button class="clear-completed">Clear completed (1)</button>
-        </footer>
-    </section>
-</div>
-<script src="js/client.js"></script>
-<script>
-    window.onload = function () {
-        todomvc.core.main();
-    }
-</script>
-</body>
+    <link rel="stylesheet" href="todos.css">
+  </head>
+  <body>
+    <div id="app">
+    </div>
+    <script src="js/client.js"></script>
+    <script>
+        window.onload = function () {
+            todomvc.core.main();
+        }
+    </script>
+  </body>
 </html>

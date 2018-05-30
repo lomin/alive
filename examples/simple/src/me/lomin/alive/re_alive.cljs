@@ -1,4 +1,5 @@
-(ns me.lomin.alive.re-alive)
+(ns me.lomin.alive.re-alive
+  (:require [re-frame.core :as re-frame]))
 
 (def log (.-log js/console))
 
@@ -15,7 +16,7 @@
 
 (defn <sub [subscription]
   (->> subscription
-       (re-frame.core/subscribe)
+       (re-frame/subscribe)
        (deref)
        (log2 (to-json subscription))))
 
