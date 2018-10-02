@@ -1,8 +1,11 @@
 (ns todomvc.views
   (:require [reagent.core  :as reagent]
             [re-frame.core :refer [subscribe dispatch]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [me.lomin.alive.core :as alive]
+            [me.lomin.spectree :as spectree]))
 
+(def template (alive/load-template-from-path "index.html"))
 
 (defn todo-input [{:keys [title on-save on-stop]}]
   (let [val  (reagent/atom title)
@@ -49,6 +52,7 @@
                           (dispatch [:delete-todo id]))
              :on-stop #(reset! editing false)}])])))
 
+;(def template (alive/load-template-from-path "index.html"))
 
 (defn task-list
   []
@@ -64,6 +68,7 @@
           "Mark all as complete"]
         [:ul#todo-list
           (for [todo  visible-todos]
+            ; In other words, these two forms are now equivalent: ^{:key foo} [:li bar] and [:li {:key foo} bar]
             ^{:key (:id todo)} [todo-item todo])]]))
 
 
@@ -99,6 +104,7 @@
 
 (defn todo-app
   [& args]
+  (spectree/+)
   [:div
    [:section#todoapp
     [task-entry]

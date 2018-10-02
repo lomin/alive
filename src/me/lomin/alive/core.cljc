@@ -2,13 +2,33 @@
   (:require [me.lomin.alive.html :as html]
             [me.lomin.alive.reload]
             [com.rpl.specter :as specter]
+            [me.lomin.spectree :as spectree :refer [each]]
+            [me.lomin.spectree.tree-search :as tree-search]
             [hickory.core :as hickory]
             [clojure.string :as string]
             [clojure.walk :as walk])
   #?(:cljs (:require-macros me.lomin.alive.core)))
 
+(defmethod me.lomin.spectree.keyword/selector :html [ns k ns+k]
+  (let [selector-name (name k)
+        first-char (first selector-name)]
+    (cond
+      (= \# first-char) (let [id (apply str (rest selector-name))]
+                          (tree-search/selector [sequential? #(= id (:id (second %)))]))
+      (= \. first-char) (let [class-name (apply str (rest selector-name))]
+                          (tree-search/selector [sequential?
+                                                 #(if-let [class-str (:class (second %))]
+                                                    (some #{class-name}
+                                                          (clojure.string/split class-str
+                                                                                #" ")))]))
+      :else (tree-search/selector [sequential? specter/FIRST #(= k %)]))))
+
 #?(:clj
    (do
+
+     (defn html2 [v]
+       (prn "--_____>!" (class v))
+       (mapv #(do (prn "____->" (class %)) (list 'me.lomin.spectree/each %)) v))
 
      (defn- react-prop? [prop]
        (first (filter (comp (partial = prop)
@@ -79,7 +99,7 @@
     :else selector))
 
 (defn not-selected? [selector]
-  (specter/not-selected? (make-selector selector)))
+  (specter/not-selected? (each selector)))
 
 (defn make-path [path]
   (mapv make-selector path))

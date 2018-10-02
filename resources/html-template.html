@@ -4,5 +4,45 @@
     <h1>todos</h1>
     <input class="new-todo" placeholder="What needs to be done?"  name="newTodo" autofocus autocomplete="on">
 </header>
+<div id="app">
+    <div>
+        <section id="todoapp">
+            <header id="header"><h1>todos</h1><input type="text" id="new-todo" placeholder="What needs to be done?"
+                                                     value=""></header>
+            <section id="main"><input type="checkbox" id="toggle-all" value="on">
+                <label for="toggle-all">Mark all as complete</label>
+                <ul id="todo-list">
+                    <li class="completed editing">
+                        <div class="view"><input type="checkbox" class="toggle" value="on"><label>__editing__</label>
+                            <button class="destroy"></button>
+                        </div>
+                        <input type="text" class="edit" value="__editing__"></li>
+                    <li class="">
+                        <div class="view"><input type="checkbox" class="toggle" value="on"><label>__todo__</label>
+                            <button class="destroy"></button>
+                        </div>
+                    </li>
+                    <li class="completed ">
+                        <div class="view"><input type="checkbox" class="toggle" value="on"><label>__done__</label>
+                            <button class="destroy"></button>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+            <footer id="footer">
+                <span id="todo-count"></span>
+                <strong>2</strong>
+                <ul id="filters">
+                    <li><a class="selected" href="#/all">All</a></li>
+                    <li><a href="#/active">Active</a></li>
+                    <li><a href="#/done">Completed</a></li>
+                </ul>
+                <button id="clear-completed">Clear completed</button>
+            </footer>
+        </section>
+        <footer id="info"><p>Double-click to edit a todo</p></footer>
+    </div>
+</div>
+
 </body>
 </html>

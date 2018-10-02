@@ -1,4 +1,4 @@
-(ns me.lomin.alive.doo-runner
+(ns me.lomin.alive.test-runner
   (:require [doo.runner :refer-macros [doo-tests]]
             [me.lomin.alive.alive-test]))
 
