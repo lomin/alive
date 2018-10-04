@@ -6,16 +6,8 @@
             [hickory.core :as h])
   #?(:cljs (:require-macros me.lomin.alive.core)))
 
-(defn hans [x]
-  (prn x)
-  x)
-
 #?(:clj
    (do
-     (deftype MapKeySelector [k]
-       clojure.lang.IDeref
-       (deref [self] k))
-
      (defn- trim-html [s]
        (-> s
            (clojure.string/replace #"\s\s+" " ")
@@ -55,46 +47,17 @@
                             (eval path))
                           (clojure.java.io/resource))))))
 
-#?(:cljs
-   (deftype MapKeySelector [k]
-     IDeref
-     (-deref [self] k)))
-
-(def html-selector
-  (specter/recursive-path [path]
-                          p
-                          (specter/if-path sequential?
-                                           (specter/if-path path
-                                                            (specter/continue-then-stay specter/ALL p)
-                                                            [specter/ALL p]))))
-
 (def TAG 0)
 (def ATTRS 1)
 
 (defn map-key [k]
-  (MapKeySelector. k))
+  (specter/must k))
 
-(defn make-selector [selector]
+(defn each [selector]
   (cond
-    (keyword? selector)
-    (let [selector-name (name selector)
-          first-char (first selector-name)]
-      (cond
-        (= \# first-char)
-        (let [id (apply str (rest selector-name))]
-          (html-selector [#(= id (:id (second %)))]))
-        (= \. first-char)
-        (let [class-name (apply str (rest selector-name))]
-          (html-selector [#(if-let [class-str (:class (second %))]
-                             (some #{class-name}
-                                   (clojure.string/split class-str #" ")))]))
-        :else (html-selector [specter/FIRST #(= selector %)])))
-    (number? selector) (specter/nthpath selector)
-    (= MapKeySelector (type selector)) @selector
+    (keyword? selector) (spectree-keyword/each selector)
+    (vector? selector) (mapv each selector)
     :else selector))
-
-(defn make-path [path]
-  (mapv make-selector path))
 
 (defn make-set-from-str [class-str]
   (if class-str
@@ -151,7 +114,7 @@
   (apply partial make-component* args))
 
 (defn- transform* [dom [raw-path transformation]]
-  (specter/transform (make-path raw-path)
+  (specter/transform (each raw-path)
                      transformation
                      dom))
 
@@ -159,11 +122,6 @@
   (if (not (even? (count args)))
     [:p {} "FAIL: uneven path-transformation-pairs to transform"]
     (reduce transform* dom (partition 2 args))))
-
-(defn select-snippet [selector dom]
-  (specter/select-first
-    (make-path selector)
-    dom))
 
 (defmethod spectree-keyword/selector nil [ns k ns+k]
   (tree-search/selector [specter/FIRST #(= k %)]))
@@ -173,8 +131,5 @@
                             (some #{(name k)}
                                   (string/split class-str #" ")))]))
 
-(defn each [selector]
-  (cond
-    (keyword? selector) (spectree-keyword/each selector)
-    (vector? selector) (mapv each selector)
-    :else selector))
+(defmethod spectree-keyword/selector :# [ns k ns+k]
+  (tree-search/selector [#(= (name k) (:id (second %)))]))
