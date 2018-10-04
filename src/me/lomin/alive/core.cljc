@@ -1,7 +1,14 @@
 (ns me.lomin.alive.core
-  (:require [com.rpl.specter :as s]
+  (:require [com.rpl.specter :as specter]
+            [me.lomin.spectree.keyword :as spectree-keyword]
+            [me.lomin.spectree.tree-search :as tree-search]
+            [clojure.string :as string]
             [hickory.core :as h])
   #?(:cljs (:require-macros me.lomin.alive.core)))
+
+(defn hans [x]
+  (prn x)
+  x)
 
 #?(:clj
    (do
@@ -14,20 +21,36 @@
            (clojure.string/replace #"\s\s+" " ")
            (clojure.string/replace #">\W*<" "><")))
 
-     (defn- load-hiccup [resource]
+     (defn tag-as-element [hiccup]
+       [:me.lomin.alive/element (vec hiccup)])
+
+     (defn tag-as-document [hiccup]
+       [:me.lomin.alive/document (vec hiccup)])
+
+     (defn- load-hiccup [parser tag resource]
        (-> (with-open [rdr (clojure.java.io/reader resource)]
              (trim-html (apply str
                                (map clojure.string/trim-newline
                                     (line-seq rdr)))))
-           (h/parse)
+           (parser)
            (h/as-hiccup)
-           (vec)))
+           (tag)))
 
      (defmacro load-template-from-resource [resource]
-       `~(load-hiccup resource))
+       `~(load-hiccup h/parse tag-as-document resource))
+
+     (defmacro load-snippet-from-path [path]
+       `~(load-hiccup (comp first h/parse-fragment)
+                      tag-as-element
+                      (-> (if (string? path)
+                            path
+                            (eval path))
+                          (clojure.java.io/resource))))
 
      (defmacro load-template-from-path [path]
-       `~(load-hiccup (-> (if (string? path)
+       `~(load-hiccup h/parse
+                      tag-as-document
+                      (-> (if (string? path)
                             path
                             (eval path))
                           (clojure.java.io/resource))))))
@@ -38,12 +61,12 @@
      (-deref [self] k)))
 
 (def html-selector
-  (s/recursive-path [path]
-                    p
-                    (s/if-path sequential?
-                               (s/if-path path
-                                          (s/continue-then-stay s/ALL p)
-                                          [s/ALL p]))))
+  (specter/recursive-path [path]
+                          p
+                          (specter/if-path sequential?
+                                           (specter/if-path path
+                                                            (specter/continue-then-stay specter/ALL p)
+                                                            [specter/ALL p]))))
 
 (def TAG 0)
 (def ATTRS 1)
@@ -65,15 +88,15 @@
           (html-selector [#(if-let [class-str (:class (second %))]
                              (some #{class-name}
                                    (clojure.string/split class-str #" ")))]))
-        :else (html-selector [s/FIRST #(= selector %)])))
-    (number? selector) (s/nthpath selector)
+        :else (html-selector [specter/FIRST #(= selector %)])))
+    (number? selector) (specter/nthpath selector)
     (= MapKeySelector (type selector)) @selector
     :else selector))
 
 (defn make-path [path]
   (mapv make-selector path))
 
-(defn- make-set-from-str [class-str]
+(defn make-set-from-str [class-str]
   (if class-str
     (set (clojure.string/split class-str #" "))
     #{}))
@@ -128,9 +151,9 @@
   (apply partial make-component* args))
 
 (defn- transform* [dom [raw-path transformation]]
-  (s/transform (make-path raw-path)
-               transformation
-               dom))
+  (specter/transform (make-path raw-path)
+                     transformation
+                     dom))
 
 (defn transform [dom & args]
   (if (not (even? (count args)))
@@ -138,6 +161,20 @@
     (reduce transform* dom (partition 2 args))))
 
 (defn select-snippet [selector dom]
-  (s/select-first
+  (specter/select-first
     (make-path selector)
     dom))
+
+(defmethod spectree-keyword/selector nil [ns k ns+k]
+  (tree-search/selector [specter/FIRST #(= k %)]))
+
+(defmethod spectree-keyword/selector :. [ns k ns+k]
+  (tree-search/selector [#(if-let [class-str (and (seqable? %) (:class (second %)))]
+                            (some #{(name k)}
+                                  (string/split class-str #" ")))]))
+
+(defn each [selector]
+  (cond
+    (keyword? selector) (spectree-keyword/each selector)
+    (vector? selector) (mapv each selector)
+    :else selector))

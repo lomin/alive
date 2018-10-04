@@ -1,11 +1,7 @@
 (ns me.lomin.alive.alive-test
   (:require [me.lomin.alive.core :as alive]
             [com.rpl.specter :as s]
-    #?(:clj
-            [clojure.test :refer :all]))
-  #?(:cljs
-     (:require-macros
-       [cljs.test :refer [deftest is testing]])))
+            [clojure.test :refer [deftest is testing]]))
 
 (def template (alive/load-template-from-path "html-snippet.html"))
 
