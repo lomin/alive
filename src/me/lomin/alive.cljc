@@ -66,10 +66,15 @@
                                                       ~@body
                                                       dom#)
                            (rest nodes#))
-                    dom#)))))))
+                    dom#))))))
 
-(def TAG 0)
-(def ATTRS 1)
+   :cljs (do
+
+           (defn make-component [& args]
+             (fn [_] (vec args)))))
+
+(def TAG alive-core/TAG)
+(def ATTRS alive-core/ATTRS)
 
 (defn map-key [k]
   (specter/must k))
@@ -87,7 +92,7 @@
 (defn class-contains
   ([a-class] #(class-contains a-class %))
   ([a-class node]
-   (contains? (alive-core/make-set-from-str (get-in node [alive-core/ATTRS :class])) a-class)))
+   (contains? (alive-core/make-set-from-str (get-in node [ATTRS :class])) a-class)))
 
 (defn set-listener
   ([event f] #(set-listener event f %))
@@ -97,15 +102,15 @@
 (defn set-attr
   ([k v] #(set-attr k v %))
   ([k v node]
-   (update node alive-core/ATTRS assoc k v)))
+   (update node ATTRS assoc k v)))
 
 (defn remove-attr [k node]
-  (update node alive-core/ATTRS dissoc k))
+  (update node ATTRS dissoc k))
 
 (defn attr-contains
   ([k v] #(attr-contains k v %))
   ([k v node]
-   (contains? (alive-core/make-set-from-str (get-in node [alive-core/ATTRS k])) v)))
+   (contains? (alive-core/make-set-from-str (get-in node [ATTRS k])) v)))
 
 (defn append
   ([content] #(append content %))

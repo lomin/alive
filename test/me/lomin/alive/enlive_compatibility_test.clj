@@ -2,10 +2,8 @@
   (:require [clojure.test :refer :all]
             [me.lomin.alive :as alive]
             [net.cgrand.enlive-html :as enlive]
-            [me.lomin.alive.core :as alive-core]
             [clojure.walk :as walk]
-            [clojure.string :as str]
-            [clojure.string :as string]))
+            [clojure.string :as str]))
 
 (def template-file "html-template.html")
 (def snippet-file "html-snippet.html")

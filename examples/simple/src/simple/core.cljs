@@ -73,8 +73,8 @@
   (alive/set-listener :on-change #(rf/dispatch [:time-color-change (-> % .-target .-value)])))
 
 (alive/defsnippet ui [] template [:#/app]
-  [:./color-input] (alive-core/make-component2 color-input)
-  [:./example-clock] (alive-core/make-component2 clock))
+  [:./color-input] (alive/make-component color-input)
+  [:./example-clock] (alive/make-component clock))
 
 ;; -- Entry Point -------------------------------------------------------------
 

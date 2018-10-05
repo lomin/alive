@@ -3,7 +3,7 @@
             [me.lomin.spectree.keyword :as spectree-keyword]
             [me.lomin.spectree.tree-search :as tree-search]
             [clojure.string :as string]
-            [hickory.core :as h])
+            [hickory.core :as hiccup])
   #?(:cljs (:require-macros me.lomin.alive.core)))
 
 #?(:clj
@@ -25,14 +25,11 @@
                                (map clojure.string/trim-newline
                                     (line-seq rdr)))))
            (parser)
-           (h/as-hiccup)
+           (hiccup/as-hiccup)
            (tag)))))
 
 (def TAG 0)
 (def ATTRS 1)
-
-(defn map-key [k]
-  (specter/must k))
 
 (defn each [selector]
   (cond
@@ -45,19 +42,6 @@
     (set (clojure.string/split class-str #" "))
     #{}))
 
-(defn add-content
-  ([content] #(add-content content %))
-  ([content node]
-   (conj node content)))
-
-(defn replace-content
-  ([content] #(replace-content content %))
-  ([content node]
-   (into [(first node) (second node)] content)))
-
-(defn remove-attr [k node]
-  (update node ATTRS dissoc k))
-
 (defn update-attr [& args]
   (apply update (last args) ATTRS (drop-last args)))
 
@@ -67,35 +51,6 @@
              (comp #(clojure.string/join " " (sort (vec %)))
                    f
                    make-set-from-str)))
-
-(defn add-class
-  ([a-class] #(add-class a-class %))
-  ([a-class node]
-   (update-classes #(conj % a-class) node)))
-
-(defn remove-class
-  ([a-class] #(remove-class a-class %))
-  ([a-class node]
-   (update-classes #(disj % a-class) node)))
-
-(defn contains-class?
-  ([a-class] #(contains-class? a-class %))
-  ([a-class node]
-   (contains? (make-set-from-str (get-in node [ATTRS :class])) a-class)))
-
-(defn set-listener
-  ([event f] #(set-listener event f %))
-  ([event f node]
-   (update-attr assoc event f node)))
-
-(defn- make-component* [& args]
-  (vec args))
-
-(defn make-component [& args]
-  (apply partial make-component* args))
-
-(defn make-component2 [& args]
-  (fn [_] (vec args)))
 
 (defn- transform* [dom [raw-path transformation]]
   (specter/transform (each raw-path)
