@@ -4,7 +4,7 @@
             [com.rpl.specter :as s]
             [clojure.test :refer [deftest is testing]]))
 
-(def template (alive.core/load-template-from-path "html-snippet.html"))
+(def template (alive/load-template-from-path "html-snippet.html"))
 
 (deftest ^:unit select-snippet-test
   (is (= [:me.lomin.alive/document

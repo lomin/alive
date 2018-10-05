@@ -10,8 +10,8 @@
 (def template-file "html-template.html")
 (def snippet-file "html-snippet.html")
 
-(def alive-template (alive-core/load-template-from-path template-file))
-(def alive-snippet (alive-core/load-snippet-from-path snippet-file))
+(def alive-template (alive/load-template-from-path template-file))
+(def alive-snippet (alive/load-snippet-from-path snippet-file))
 (def enlive-template (enlive/html-resource template-file))
 
 (defn remove-string-blank [template]

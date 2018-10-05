@@ -1,13 +1,15 @@
-(defproject simple "1.1.0"
-  :dependencies [[org.clojure/clojure        "1.8.0"]
-                 [org.clojure/clojurescript  "1.9.542"]
-                 [reagent  "0.6.2"]
-                 [re-frame "0.9.3"]
-                 [com.rpl/specter "1.0.1"]
-                 [hickory "0.7.1"]]
+(defproject simple "2.0.0"
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.10.339"]
+                 [com.rpl/specter "1.1.1"]
+                 [hiccup "1.0.5"]
+                 [me.lomin/spectree "0.2.0"]
+                 [hickory "0.7.1"]
+                 [reagent  "0.7.0"]
+                 [re-frame "0.10.5"]]
 
-  :plugins [[lein-cljsbuild "1.1.6"]
-            [lein-figwheel  "0.5.10"]]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-figwheel  "0.5.14"]]
 
   :hooks [leiningen.cljsbuild]
 

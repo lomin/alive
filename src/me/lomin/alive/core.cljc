@@ -8,7 +8,7 @@
 
 #?(:clj
    (do
-     (defn- trim-html [s]
+     (defn trim-html [s]
        (-> s
            (clojure.string/replace #"\s\s+" " ")
            (clojure.string/replace #">\W*<" "><")))
@@ -19,33 +19,14 @@
      (defn tag-as-document [hiccup]
        [:me.lomin.alive/document (vec hiccup)])
 
-     (defn- load-hiccup [parser tag resource]
+     (defn load-hiccup [parser tag resource]
        (-> (with-open [rdr (clojure.java.io/reader resource)]
              (trim-html (apply str
                                (map clojure.string/trim-newline
                                     (line-seq rdr)))))
            (parser)
            (h/as-hiccup)
-           (tag)))
-
-     (defmacro load-template-from-resource [resource]
-       `~(load-hiccup h/parse tag-as-document resource))
-
-     (defmacro load-snippet-from-path [path]
-       `~(load-hiccup (comp first h/parse-fragment)
-                      tag-as-element
-                      (-> (if (string? path)
-                            path
-                            (eval path))
-                          (clojure.java.io/resource))))
-
-     (defmacro load-template-from-path [path]
-       `~(load-hiccup h/parse
-                      tag-as-document
-                      (-> (if (string? path)
-                            path
-                            (eval path))
-                          (clojure.java.io/resource))))))
+           (tag)))))
 
 (def TAG 0)
 (def ATTRS 1)
@@ -112,6 +93,9 @@
 
 (defn make-component [& args]
   (apply partial make-component* args))
+
+(defn make-component2 [& args]
+  (fn [_] (vec args)))
 
 (defn- transform* [dom [raw-path transformation]]
   (specter/transform (each raw-path)
