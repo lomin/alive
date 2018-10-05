@@ -1,4 +1,4 @@
-(defproject me.lomin/alive "2.0.0"
+(defproject me.lomin/alive "0.3.0"
   :description "A selector-based (à la CSS) templating library for Clojure and ClojureScript, inspired by enlive."
   :url "https://github.com/lomin/alive"
   :license {:name "Eclipse Public License"
