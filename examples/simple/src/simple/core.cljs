@@ -55,7 +55,7 @@
 
 ;; -- Domino 5 - View Functions ----------------------------------------------
 
-(def template (alive/select [:#/app] (alive/load-template-from-path "public/example.html")))
+(def template (alive/load-template-from-path "public/example.html"))
 
 (alive/defsnippet clock [] template [:./example-clock]
   [:./example-clock]
