@@ -117,6 +117,14 @@
   ([content node]
    (conj node content)))
 
+(def NIL specter/NONE)
+
+(defn none
+  ([] (none (constantly true)))
+  ([selector] #(none selector %))
+  ([selector node]
+   (specter/setval (alive-core/each selector) NIL node)))
+
 (defn content
   ([c] #(content c %))
   ([c node]
