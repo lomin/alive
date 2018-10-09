@@ -9,6 +9,12 @@
                  [hiccup "1.0.5"]
                  [me.lomin/spectree "0.2.0"]
                  [hickory "0.7.1"]]
+
+  :test-selectors {:default   (constantly true)
+                   :unit      :unit
+                   :focused   :focused
+                   :all       (constantly true)}
+
   :cljsbuild {:builds
               [{:id           "test"
                 :source-paths ["src" "test"]
