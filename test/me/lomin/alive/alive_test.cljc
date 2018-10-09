@@ -26,7 +26,7 @@
 (deftest ^:unit replace-content-test
   (is (= [:article {:id "Question1"} :p {} "Replaced!"]
          (alive/content [:p {} "Replaced!"]
-                                     test-article))))
+                        test-article))))
 
 (deftest ^:unit contains-class?-test
   (is (not (alive/class-contains "question" [:div {} " e.hmtl Q1 "])))
@@ -80,11 +80,37 @@
           [:div {:class "answer new-class2 new-class3"} " e.hmtl A1 "]]
          (alive.core/transform test-article
                                [:./question] (comp (alive/add-class "new-class0")
-                                                  (alive/add-class "new-class1"))
+                                                   (alive/add-class "new-class1"))
                                [:./answer] (comp (alive/add-class "new-class2")
-                                                (alive/add-class "new-class3")))))
+                                                 (alive/add-class "new-class3")))))
+
+  (is (= [:article
+          {:id "Question1"}
+          [:div {:class "answer"} " e.hmtl A1 "]]
+         (alive.core/transform test-article
+                               [] (alive/NIL :./question))))
+
+  (is (= [:article
+          {:id "Question1"}
+          [:div {:class "answer"} " e.hmtl A1 "]]
+         (alive.core/transform test-article
+                               [:./question] (alive/NIL (constantly true)))))
+
   (testing "transforms within nested structures"
     (is (= [:div {:class "question", :l0 {:l1 2}} "test"]
            (alive.core/transform
              [:div {:class "question" :l0 {:l1 1}} "test"]
              [:./question alive/ATTRS (alive/map-key :l0) (alive/map-key :l1)] inc)))))
+
+(deftest ^:unit transform-macro-test
+  (testing "transform macro test"
+    (is (= {:a 6 :b 4 :c {:d 6 :e 4 :f [0 2 2]}}
+           ((alive/transform
+              [:key/a] inc
+              [(alive/map-key :c)] (alive/transform
+                                     [(alive/map-key :d)] inc
+                                     [(alive/map-key :e)] dec
+                                     [(alive/map-key :f)] (alive/transform
+                                                            1 inc))
+              [(alive/map-key :b)] dec)
+             {:a 5 :b 5 :c {:d 5 :e 5 :f [0 1 2]}})))))

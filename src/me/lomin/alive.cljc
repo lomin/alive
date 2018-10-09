@@ -5,68 +5,73 @@
             #?(:clj [hiccup.core :as hiccup]))
   #?(:cljs (:require-macros me.lomin.alive)))
 
-#?(:clj (do
+#?(:clj  (do
 
-          (defmacro load-template-from-resource [resource]
-            `~(alive-core/load-hiccup h/parse alive-core/tag-as-document resource))
+           (defmacro load-template-from-resource [resource]
+             `~(alive-core/load-hiccup h/parse alive-core/tag-as-document resource))
 
-          (defmacro load-snippet-from-path [path]
-            `~(alive-core/load-hiccup (comp first h/parse-fragment)
-                                      alive-core/tag-as-element
-                                      (-> (if (string? path)
-                                            path
-                                            (eval path))
-                                          (clojure.java.io/resource))))
+           (defmacro load-snippet-from-path [path]
+             `~(alive-core/load-hiccup (comp first h/parse-fragment)
+                                       alive-core/tag-as-element
+                                       (-> (if (string? path)
+                                             path
+                                             (eval path))
+                                           (clojure.java.io/resource))))
 
-          (defmacro load-template-from-path [path]
-            `~(alive-core/load-hiccup h/parse
-                                      alive-core/tag-as-document
-                                      (-> (if (string? path)
-                                            path
-                                            (eval path))
-                                          (clojure.java.io/resource))))
+           (defmacro load-template-from-path [path]
+             `~(alive-core/load-hiccup h/parse
+                                       alive-core/tag-as-document
+                                       (-> (if (string? path)
+                                             path
+                                             (eval path))
+                                           (clojure.java.io/resource))))
 
-          (defn render [[tag dom :as dom*]]
-            (case tag
-              ::document (hiccup/html {:mode :html}
-                                      (specter/select-first #each/key [:html]
-                                                            dom))
-              ::element (hiccup/html {:mode :html} dom)
-              (hiccup/html {:mode :html} dom*)))
+           (defn render [[tag dom :as dom*]]
+             (case tag
+               ::document (hiccup/html {:mode :html}
+                                       (specter/select-first #each/key [:html]
+                                                             dom))
+               ::element (hiccup/html {:mode :html} dom)
+               (hiccup/html {:mode :html} dom*)))
 
-          (defn- each* [arg]
-            (cond
-              (keyword? arg) (list 'me.lomin.spectree.keyword/each arg)
-              (vector? arg) (mapv each* arg)
-              :else arg))
+           (defn- each* [arg]
+             (cond
+               (keyword? arg) (list 'me.lomin.spectree.keyword/each arg)
+               (vector? arg) (mapv each* arg)
+               :else arg))
 
-          (defn- make-each-selector [selector]
-            (if (seq selector)
-              (each* selector)
-              (each* [:html])))
+           (defn- make-each-selector [selector]
+             (if (seq selector)
+               (each* selector)
+               (each* [:html])))
 
-          (defmacro defsnippet [name params snippet selector & body]
-            (let [each-selector (make-each-selector selector)]
-              `(def ~name
-                 (fn ~params
-                   (me.lomin.spectree/each+>> com.rpl.specter/transform
-                                              ~@body
-                                              (com.rpl.specter/select-first ~each-selector
-                                                                            ~snippet))))))
+           (defmacro transform [& body]
+             (cons 'me.lomin.spectree/each+>>
+                   (cons 'com.rpl.specter/transform
+                         body)))
 
-          (defmacro clone-for [[n selector] & body]
-            (let [each-selector (make-each-selector selector)]
-              `(fn clone-for*#
-                 ([dom#]
-                  (let [nodes# (com.rpl.specter/select ~each-selector dom#)]
-                    (clone-for*# dom# nodes#)))
-                 ([dom# nodes#]
-                  (if-let [~n (first nodes#)]
-                    (recur (me.lomin.spectree/each+>> com.rpl.specter/transform
-                                                      ~@body
-                                                      dom#)
-                           (rest nodes#))
-                    dom#))))))
+           (defmacro defsnippet [name params snippet selector & body]
+             (let [each-selector (make-each-selector selector)]
+               `(def ~name
+                  (fn ~params
+                    (me.lomin.spectree/each+>> com.rpl.specter/transform
+                                               ~@body
+                                               (com.rpl.specter/select-first ~each-selector
+                                                                             ~snippet))))))
+
+           (defmacro clone-for [[n selector] & body]
+             (let [each-selector (make-each-selector selector)]
+               `(fn clone-for*#
+                  ([dom#]
+                   (let [nodes# (com.rpl.specter/select ~each-selector dom#)]
+                     (clone-for*# dom# nodes#)))
+                  ([dom# nodes#]
+                   (if-let [~n (first nodes#)]
+                     (recur (me.lomin.spectree/each+>> com.rpl.specter/transform
+                                                       ~@body
+                                                       dom#)
+                            (rest nodes#))
+                     dom#))))))
 
    :cljs (do
 
