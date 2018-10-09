@@ -60,7 +60,7 @@
 (alive/defsnippet clock [] template [:./example-clock]
   [:./example-clock]
   (alive/set-attr :style {:color @(rf/subscribe [:time-color])})
-  [:./example-clock2]
+  [:./example-clock]
   (alive/content (-> @(rf/subscribe [:time])
                      .toTimeString
                      (clojure.string/split " ")
