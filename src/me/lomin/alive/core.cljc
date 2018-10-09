@@ -72,3 +72,18 @@
 
 (defmethod spectree-keyword/selector :# [ns k ns+k]
   (tree-search/selector [#(= (name k) (:id (second %)))]))
+
+
+(defmethod spectree-keyword/selector :> [ns k ns+k]
+  [seqable? #(= k (first %))])
+
+(defmethod spectree-keyword/selector :>. [ns k ns+k]
+  [seqable? #(if-let [class-str (:class (second %))]
+               (some #{(name k)}
+                     (string/split class-str #" ")))])
+
+(defmethod spectree-keyword/selector :># [ns k ns+k]
+  [seqable? #(= (name k) (:id (second %)))])
+
+(defmethod spectree-keyword/selector :key [_ k _]
+  (specter/must k))
