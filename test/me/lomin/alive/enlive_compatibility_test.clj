@@ -126,23 +126,22 @@
          (enlive-render (enlive-snippet-1))
          (alive/render (alive-snippet-1)))))
 
-(let [js-nodes-with-src-selector [:script (enlive/attr-contains :src "src")]
-      js-nodes-with-src (enlive/select enlive-template [js-nodes-with-src-selector])]
-  (enlive/defsnippet enlive-snippet-2 template-file [:head] []
-    [:script] (enlive/clone-for [node js-nodes-with-src]
-                                [:script] (enlive/append (get-in node [:attrs :src])))))
+(enlive/defsnippet enlive-clone-for-snippet template-file [:body] []
+  [:div :p]
+  (enlive/clone-for [i (range 3)]
+                    [:p] (enlive/content (str "I am #" i))))
 
-(alive/defsnippet alive-snippet-2 [] alive-template [:head]
-  [] (alive/clone-for [[_ {:keys [src]} :as node] [:script (alive/attr-contains :src "src")]]
-                      [:script] (alive/append src)))
+(alive/defsnippet alive-clone-for-snippet [] alive-template [:body]
+  [:div] (alive/clone-for [i (range 3)]
+                          [:p] (alive/content (str "I am #" i))))
 
-(deftest enlive-snippet-2-test
-  (testing "there are slight differences for clone-for in selector usage and output"
-    (is (not= (enlive-render (enlive-snippet-2))
-              (alive/render (alive-snippet-2))))
+(deftest ^:unit clone-for-test
+  (testing "there are slight differences for clone-for in selector usage, but output is the same"
+    (is (= (enlive-render (enlive-clone-for-snippet))
+           (alive/render (alive-clone-for-snippet))))
 
-    (is (= "<head><meta charset=\"utf-8\" /><link rel=\"stylesheet\" href=\"\" /><script type=\"text/javascript\" src=\"src\">src</script><script type=\"text/javascript\" src=\"\">src</script><title>This is a title placeholder</title></head>"
-           (enlive-render (enlive-snippet-2))))
+    (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
+           (time (enlive-render (enlive-clone-for-snippet)))))
 
-    (is (= "<head><meta charset=\"utf-8\"><link href=\"\" rel=\"stylesheet\"><script src=\"src\" type=\"text/javascript\">src</script><script src=\"\" type=\"text/javascript\">src</script><title>This is a title placeholder</title></head>"
-           (alive/render (alive-snippet-2))))))
+    (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
+           (time (alive/render (alive-clone-for-snippet)))))))

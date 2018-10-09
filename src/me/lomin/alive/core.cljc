@@ -52,6 +52,50 @@
                    f
                    make-set-from-str)))
 
+(def find-first
+  (specter/recursive-path [path]
+                          p
+                          (specter/cond-path sequential?
+                                             (specter/if-path path
+                                                              specter/STAY
+                                                              [specter/ALL p])
+                                             map?
+                                             (specter/if-path path
+                                                              specter/STAY
+                                                              [specter/MAP-VALS p]))))
+
+(defn- insert-after-index [val indexes node]
+  (specter/setval (specter/before-index (inc (last indexes)))
+                  val
+                  node))
+
+(defn- insert-at-index [val indexes node]
+  (specter/setval (specter/nthpath (last indexes))
+                  val
+                  node))
+
+(defn- find-index [pred]
+  (specter/collect [specter/INDEXED-VALS (find-first [indexed? (specter/nthpath 1) pred]) specter/FIRST]))
+
+(defn- insert [f val pred node]
+  (specter/transform [(specter/putval val) (find-index pred)]
+                     f
+                     node))
+
+(defn insert-after
+  ([val selector node]
+   (insert insert-after-index
+           val
+           selector
+           node)))
+
+(defn insert-at
+  ([val selector node]
+   (insert insert-at-index
+           val
+           selector
+           node)))
+
 (defn- transform* [dom [raw-path transformation]]
   (specter/transform (each raw-path)
                      transformation
@@ -73,9 +117,11 @@
 (defmethod spectree-keyword/selector :# [ns k ns+k]
   (tree-search/selector [#(= (name k) (:id (second %)))]))
 
+(defn tag= [t]
+  (specter/comp-paths seqable? specter/FIRST (specter/pred= t)))
 
 (defmethod spectree-keyword/selector :> [ns k ns+k]
-  [seqable? #(= k (first %))])
+  (tag= k))
 
 (defmethod spectree-keyword/selector :>. [ns k ns+k]
   [seqable? #(if-let [class-str (:class (second %))]

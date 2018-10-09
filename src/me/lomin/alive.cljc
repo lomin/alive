@@ -5,6 +5,69 @@
             #?(:clj [hiccup.core :as hiccup]))
   #?(:cljs (:require-macros me.lomin.alive)))
 
+
+(def TAG alive-core/TAG)
+(def ATTRS alive-core/ATTRS)
+
+(defn map-key [k]
+  (specter/must k))
+
+(defn add-class
+  ([a-class] #(add-class a-class %))
+  ([a-class node]
+   (alive-core/update-classes #(conj % a-class) node)))
+
+(defn remove-class
+  ([a-class] #(remove-class a-class %))
+  ([a-class node]
+   (alive-core/update-classes #(disj % a-class) node)))
+
+(defn class-contains
+  ([a-class] #(class-contains a-class %))
+  ([a-class node]
+   (contains? (alive-core/make-set-from-str (get-in node [ATTRS :class])) a-class)))
+
+(defn set-listener
+  ([event f] #(set-listener event f %))
+  ([event f node]
+   (alive-core/update-attr assoc event f node)))
+
+(defn set-attr
+  ([k v] #(set-attr k v %))
+  ([k v node]
+   (update node ATTRS assoc k v)))
+
+(defn remove-attr [k node]
+  (update node ATTRS dissoc k))
+
+(defn attr-contains
+  ([k v] #(attr-contains k v %))
+  ([k v node]
+   (contains? (alive-core/make-set-from-str (get-in node [ATTRS k])) v)))
+
+(defn append
+  ([content] #(append content %))
+  ([content node]
+   (conj node content)))
+
+(def NIL specter/NONE)
+
+(defn none
+  ([] (none (constantly true)))
+  ([selector] #(none selector %))
+  ([selector node]
+   (specter/setval (alive-core/each selector) NIL node)))
+
+(defn substitute
+  ([c] #(substitute c %))
+  ([c node]
+   (if (string? c) [c {}] c)))
+
+(defn content
+  ([c] #(content c %))
+  ([c node]
+   (into [(first node) (or (second node) {})] (if (string? c) [c] c))))
+
 #?(:clj  (do
 
            (defmacro load-template-from-resource [resource]
@@ -59,81 +122,32 @@
                                                (com.rpl.specter/select-first ~each-selector
                                                                              ~snippet))))))
 
-           (defmacro clone-for [[n selector] & body]
-             (let [each-selector (make-each-selector selector)]
-               `(fn clone-for*#
-                  ([dom#]
-                   (let [nodes# (com.rpl.specter/select ~each-selector dom#)]
-                     (clone-for*# dom# nodes#)))
-                  ([dom# nodes#]
-                   (if-let [~n (first nodes#)]
-                     (recur (me.lomin.spectree/each+>> com.rpl.specter/transform
-                                                       ~@body
-                                                       dom#)
-                            (rest nodes#))
-                     dom#))))))
+           (defmacro clone-for
+             ([bind-expr selector transformation node]
+              `((clone-for ~bind-expr ~selector ~transformation) ~node))
+             ([[bind expr] selector transformation]
+              (let [each-selector (make-each-selector selector)]
+                `(fn clone-for*#
+                   ([node#]
+                    (clone-for*# ~expr
+                                 (com.rpl.specter/select-first ~each-selector node#)
+                                 nil
+                                 node#))
+                   ([expr# child# insert# node#]
+                    (if-let [~bind (first expr#)]
+                      (recur (rest expr#)
+                             child#
+                             me.lomin.alive.core/insert-after
+                             ((or insert# me.lomin.alive.core/insert-at)
+                               (~transformation child#)
+                               ~each-selector
+                               node#))
+                      node#)))))))
 
    :cljs (do
 
            (defn make-component [& args]
              (fn [_] (vec args)))))
-
-(def TAG alive-core/TAG)
-(def ATTRS alive-core/ATTRS)
-
-(defn map-key [k]
-  (specter/must k))
-
-(defn add-class
-  ([a-class] #(add-class a-class %))
-  ([a-class node]
-   (alive-core/update-classes #(conj % a-class) node)))
-
-(defn remove-class
-  ([a-class] #(remove-class a-class %))
-  ([a-class node]
-   (alive-core/update-classes #(disj % a-class) node)))
-
-(defn class-contains
-  ([a-class] #(class-contains a-class %))
-  ([a-class node]
-   (contains? (alive-core/make-set-from-str (get-in node [ATTRS :class])) a-class)))
-
-(defn set-listener
-  ([event f] #(set-listener event f %))
-  ([event f node]
-   (alive-core/update-attr assoc event f node)))
-
-(defn set-attr
-  ([k v] #(set-attr k v %))
-  ([k v node]
-   (update node ATTRS assoc k v)))
-
-(defn remove-attr [k node]
-  (update node ATTRS dissoc k))
-
-(defn attr-contains
-  ([k v] #(attr-contains k v %))
-  ([k v node]
-   (contains? (alive-core/make-set-from-str (get-in node [ATTRS k])) v)))
-
-(defn append
-  ([content] #(append content %))
-  ([content node]
-   (conj node content)))
-
-(def NIL specter/NONE)
-
-(defn none
-  ([] (none (constantly true)))
-  ([selector] #(none selector %))
-  ([selector node]
-   (specter/setval (alive-core/each selector) NIL node)))
-
-(defn content
-  ([c] #(content c %))
-  ([c node]
-   (into [(first node) (second node)] (if (string? c) [c] c))))
 
 (defn select [selector dom]
   (specter/select (alive-core/each selector) dom))

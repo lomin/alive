@@ -88,13 +88,13 @@
           {:id "Question1"}
           [:div {:class "answer"} " e.hmtl A1 "]]
          (alive.core/transform test-article
-                               [] (alive/NIL :./question))))
+                               [] (alive/none :./question))))
 
   (is (= [:article
           {:id "Question1"}
           [:div {:class "answer"} " e.hmtl A1 "]]
          (alive.core/transform test-article
-                               [:./question] (alive/NIL (constantly true)))))
+                               [:./question] (alive/none (constantly true)))))
 
   (testing "transforms within nested structures"
     (is (= [:div {:class "question", :l0 {:l1 2}} "test"]
