@@ -11,7 +11,13 @@
           [[:html {} [:head {}] [:body {} [:div {} [:p {} "I am a snippet!"]]]]]]
          template))
   (is (= [[:div {} [:p {} "I am a snippet!"]]]
-         (alive/select [:div] template))))
+         (alive/select [:div] template)))
+  (is (= []
+         (alive/select [:>/div] template)))
+  (is (= [[:div {:class "test"} [:p {} "I am a snippet!"]]]
+         (alive/select [:>/div] [:div {:class "test"} [:p {} "I am a snippet!"]])))
+  (is (= [[:div {:class "test"} [:p {} "I am a snippet!"]]]
+         (alive/select [:>./test] [:div {:class "test"} [:p {} "I am a snippet!"]]))))
 
 (deftest ^:unit add-class-test
   (is (= [:div {:class "c0 c1 c2 c3"}]

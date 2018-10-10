@@ -16,33 +16,40 @@
 
 (defmulti keyword-selector (fn [k] (keyword (namespace k))) :default ::none)
 
-(defmethod keyword-selector ::none [k] k)
-(defmethod keyword-selector :must [k] (walker (specter/must (keyword (name k)))))
+(defmethod keyword-selector ::none [k] [identity k])
+(defmethod keyword-selector :must [k] [walker (specter/must (keyword (name k)))])
 
 (defn tag= [t]
   (specter/comp-paths seqable? (specter/selected? [specter/FIRST (specter/pred= t)])))
 
 (defmethod keyword-selector nil [k]
-  (tag= k))
+  [walker
+   (tag= k)])
 
 (defmethod keyword-selector :. [k]
-  [seqable? #(if-let [class-str (:class (second %))]
-               (some #{(name k)}
-                     (string/split class-str #" ")))])
+  [walker
+   [seqable? #(if-let [class-str (:class (second %))]
+                (some #{(name k)}
+                      (string/split class-str #" ")))]])
 
 (defmethod keyword-selector :# [k]
-  [seqable? #(= (name k) (:id (second %)))])
+  [walker
+   [seqable? #(= (name k) (:id (second %)))]])
 
 (defmethod keyword-selector :> [k]
-  (tag= (keyword (name k))))
+  [identity
+   (tag= (keyword (name k)))])
 
 (defmethod keyword-selector :>. [k]
-  [seqable? #(if-let [class-str (:class (second %))]
-               (some #{(name k)}
-                     (string/split class-str #" ")))])
+  [identity
+   [seqable? #(if-let [class-str (:class (second %))]
+                (some #{(name k)}
+                      (string/split class-str #" ")))]])
 
 (defmethod keyword-selector :># [k]
-  [seqable? #(= (name k) (:id (second %)))])
+  [identity
+   [seqable? #(= (name k) (:id (second %)))]])
 
 (defmethod keyword-selector :key [k]
-  (specter/must (keyword (name k))))
+  [walker
+   (specter/must (keyword (name k)))])

@@ -6,13 +6,15 @@
 
 (defn decorate [selector]
   (cond
-    (keyword? selector) (alive-selectors/keyword-selector selector)
+    (keyword? selector) (let [[_ sel] (alive-selectors/keyword-selector selector)]
+                          sel)
     (vector? selector) (mapv decorate selector)
-    :else selector) )
+    :else selector))
 
 (defn walk [selector]
   (cond
-    (keyword? selector) (alive-selectors/walker (decorate selector))
+    (keyword? selector) (let [[wrapper sel] (alive-selectors/keyword-selector selector)]
+                          (wrapper sel))
     (vector? selector) (mapv walk selector)
     :else selector))
 
