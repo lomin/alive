@@ -1,10 +1,32 @@
 (ns me.lomin.alive.core
   (:require [com.rpl.specter :as specter]
+            #?(:clj [me.lomin.alive.macros :as alive-macros])
             [me.lomin.spectree.keyword :as spectree-keyword]
             [me.lomin.spectree.tree-search :as tree-search]
             [clojure.string :as string]
             [hickory.core :as hiccup])
   #?(:cljs (:require-macros me.lomin.alive.core)))
+
+(defn each [selector]
+  (cond
+    (keyword? selector) (spectree-keyword/each selector)
+    (vector? selector) (mapv each selector)
+    :else selector))
+
+(defn tree [selector]
+  (cond
+    (keyword? selector) (tree-search/selector (spectree-keyword/each selector))
+    (vector? selector) (mapv tree selector)
+    :else selector))
+
+(defn pairs
+  ([args] (pairs [] nil args))
+  ([pairs spare args]
+   (if-let [x0 (first args)]
+     (if-let [x1 (second args)]
+       (recur (conj pairs [x0 x1]) spare (nnext args))
+       [pairs x0])
+     [pairs spare])))
 
 #?(:clj
    (do
@@ -26,16 +48,30 @@
                                     (line-seq rdr)))))
            (parser)
            (hiccup/as-hiccup)
-           (tag)))))
+           (tag)))
+
+     (defn- +>>* [selector-wrapper f args]
+       (let [[selector-transformation-pair coll] (pairs args)
+             selector+transformer (for [[selector transformation] selector-transformation-pair]
+                                    (list f
+                                          (selector-wrapper selector)
+                                          transformation))]
+         (if coll
+           (concat (list '->> coll) selector+transformer)
+           (let [sym (gensym)]
+             (list 'fn [sym] (+>>* selector-wrapper f (concat args [sym])))))))
+
+     (defmacro each+>> [f & args]
+       (+>>* alive-macros/each* f args))
+
+     (defmacro tree+>> [f & args]
+       (+>>* alive-macros/tree* f args))
+
+     (defmacro +>> [f & args]
+       (+>>* identity f args))))
 
 (def TAG 0)
 (def ATTRS 1)
-
-(defn each [selector]
-  (cond
-    (keyword? selector) (spectree-keyword/each selector)
-    (vector? selector) (mapv each selector)
-    :else selector))
 
 (defn make-set-from-str [class-str]
   (if class-str
@@ -52,73 +88,49 @@
                    f
                    make-set-from-str)))
 
-(def find-first
-  (specter/recursive-path [path]
-                          p
-                          (specter/cond-path sequential?
-                                             (specter/if-path path
-                                                              specter/STAY
-                                                              [specter/ALL p])
-                                             map?
-                                             (specter/if-path path
-                                                              specter/STAY
-                                                              [specter/MAP-VALS p]))))
-
-(defn- insert-after-index [val indexes node]
-  (specter/setval (specter/before-index (inc (last indexes)))
+(defn insert-after-index [val index node]
+  (specter/setval (specter/before-index index)
                   val
                   node))
 
-(defn- insert-at-index [val indexes node]
-  (specter/setval (specter/nthpath (last indexes))
+(defn insert-at-index [val index node]
+  (specter/setval (specter/nthpath index)
                   val
                   node))
 
-(defn- find-index [pred]
-  (specter/collect [specter/INDEXED-VALS (find-first [indexed? (specter/nthpath 1) pred]) specter/FIRST]))
+(defn clone*
+  ([{:keys [insert expr last-index f child] :as context} node]
+   (if-let [x (first expr)]
+     (recur (-> context
+                (update :expr rest)
+                (assoc :last-index (inc last-index))
+                (assoc :insert insert-after-index))
+            (insert ((f x) child) last-index node))
+     node)))
 
-(defn- insert [f val pred node]
-  (specter/transform [(specter/putval val) (find-index pred)]
-                     f
-                     node))
-
-(defn insert-after
-  ([val selector node]
-   (insert insert-after-index
-           val
-           selector
+(defn clone
+  ([expr selector f indexes node]
+   (clone* {:insert      insert-at-index
+             :expr       expr
+             :child      (specter/select-first [specter/ALL (me.lomin.alive.core/each selector)]
+                                               node)
+             :last-index (last indexes)
+             :f          f}
            node)))
-
-(defn insert-at
-  ([val selector node]
-   (insert insert-at-index
-           val
-           selector
-           node)))
-
-(defn- transform* [dom [raw-path transformation]]
-  (specter/transform (each raw-path)
-                     transformation
-                     dom))
-
-(defn transform [dom & args]
-  (if (not (even? (count args)))
-    [:p {} "FAIL: uneven path-transformation-pairs to transform"]
-    (reduce transform* dom (partition 2 args))))
-
-(defmethod spectree-keyword/selector nil [ns k ns+k]
-  (tree-search/selector [specter/FIRST #(= k %)]))
-
-(defmethod spectree-keyword/selector :. [ns k ns+k]
-  (tree-search/selector [#(if-let [class-str (and (seqable? %) (:class (second %)))]
-                            (some #{(name k)}
-                                  (string/split class-str #" ")))]))
-
-(defmethod spectree-keyword/selector :# [ns k ns+k]
-  (tree-search/selector [#(= (name k) (:id (second %)))]))
 
 (defn tag= [t]
-  (specter/comp-paths seqable? specter/FIRST (specter/pred= t)))
+  (specter/comp-paths seqable? (specter/selected? [specter/FIRST (specter/pred= t)])))
+
+(defmethod spectree-keyword/selector nil [ns k ns+k]
+  (tag= k))
+
+(defmethod spectree-keyword/selector :. [ns k ns+k]
+  [seqable? #(if-let [class-str (:class (second %))]
+               (some #{(name k)}
+                     (string/split class-str #" ")))])
+
+(defmethod spectree-keyword/selector :# [ns k ns+k]
+  [seqable? #(= (name k) (:id (second %)))])
 
 (defmethod spectree-keyword/selector :> [ns k ns+k]
   (tag= k))

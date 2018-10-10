@@ -2,7 +2,8 @@
   (:require [me.lomin.alive.core :as alive.core]
             [me.lomin.alive :as alive]
             [com.rpl.specter :as specter]
-            [clojure.test :refer [deftest is testing]]))
+            [clojure.test :refer [deftest is testing]]
+            [me.lomin.alive.core :as alive-core]))
 
 (def template (alive/load-template-from-path "html-snippet.html"))
 
@@ -53,7 +54,7 @@
           {:id "Question1"}
           [:div {:class "new-class question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/each [:./question])
+         (time (specter/transform (alive.core/tree [:./question])
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -69,7 +70,7 @@
           {:id "Question1"}
           [:div {:class "new-class question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/each [:article :./question])
+         (time (specter/transform (alive.core/tree [:article :./question])
                                   (alive/add-class "new-class")
                                   test-article)))))
 
@@ -78,34 +79,35 @@
           {:id "Question1"}
           [:div {:class "new-class0 new-class1 question"} " e.hmtl Q1 "]
           [:div {:class "answer new-class2 new-class3"} " e.hmtl A1 "]]
-         (alive.core/transform test-article
-                               [:./question] (comp (alive/add-class "new-class0")
-                                                   (alive/add-class "new-class1"))
-                               [:./answer] (comp (alive/add-class "new-class2")
-                                                 (alive/add-class "new-class3")))))
+         (alive/transform [:./question] (comp (alive/add-class "new-class0")
+                                              (alive/add-class "new-class1"))
+                          [:./answer] (comp (alive/add-class "new-class2")
+                                            (alive/add-class "new-class3"))
+                          test-article)))
 
   (is (= [:article
           {:id "Question1"}
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (alive.core/transform test-article
-                               [] (alive/none :./question))))
+         (alive/transform [] (alive/none :./question)
+                          test-article)))
 
   (is (= [:article
           {:id "Question1"}
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (alive.core/transform test-article
-                               [:./question] (alive/none (constantly true)))))
+         (alive/transform [:./question]
+                          (alive/none (constantly true))
+                          test-article)))
 
   (testing "transforms within nested structures"
     (is (= [:div {:class "question", :l0 {:l1 2}} "test"]
-           (alive.core/transform
-             [:div {:class "question" :l0 {:l1 1}} "test"]
-             [:./question alive/ATTRS (alive/map-key :l0) (alive/map-key :l1)] inc)))))
+           (alive/transform [:./question alive/ATTRS (alive/map-key :l0) (alive/map-key :l1)]
+                            inc
+                            [:div {:class "question" :l0 {:l1 1}} "test"])))))
 
 (deftest ^:unit transform-macro-test
   (testing "transform macro test"
     (is (= {:a 6 :b 4 :c {:d 6 :e 4 :f [0 2 2]}}
-           ((alive/transform
+           ((alive/transform2
               [:key/a] inc
               [(alive/map-key :c)] (alive/transform
                                      [(alive/map-key :d)] inc

@@ -1,5 +1,6 @@
 (ns me.lomin.alive
   (:require [me.lomin.alive.core :as alive-core]
+            #?(:clj [me.lomin.alive.macros :as alive-macros])
             [com.rpl.specter :as specter]
             [hickory.core :as h]
             #?(:clj [hiccup.core :as hiccup]))
@@ -56,12 +57,12 @@
   ([] (none (constantly true)))
   ([selector] #(none selector %))
   ([selector node]
-   (specter/setval (alive-core/each selector) NIL node)))
+   (specter/setval (alive-core/tree selector) NIL node)))
 
 (defn substitute
   ([c] #(substitute c %))
   ([c node]
-   (if (string? c) [c {}] c)))
+   (if (vector? c) c [c {}])))
 
 (defn content
   ([c] #(content c %))
@@ -89,60 +90,55 @@
                                              (eval path))
                                            (clojure.java.io/resource))))
 
+           (def html-tag-selector (alive-macros/tree :html))
+
            (defn render [[tag dom :as dom*]]
-             (case tag
-               ::document (hiccup/html {:mode :html}
-                                       (specter/select-first #each/key [:html]
-                                                             dom))
-               ::element (hiccup/html {:mode :html} dom)
-               (hiccup/html {:mode :html} dom*)))
-
-           (defn- each* [arg]
              (cond
-               (keyword? arg) (list 'me.lomin.spectree.keyword/each arg)
-               (vector? arg) (mapv each* arg)
-               :else arg))
-
-           (defn- make-each-selector [selector]
-             (if (seq selector)
-               (each* selector)
-               (each* [:html])))
+               (vector? dom*) (case tag
+                                ::document (hiccup/html {:mode :html}
+                                                        (specter/select-first html-tag-selector
+                                                                              dom))
+                                ::element (hiccup/html {:mode :html} dom)
+                                (hiccup/html {:mode :html} dom*))
+               (string? dom*) dom*
+               :else ""))
 
            (defmacro transform [& body]
-             (cons 'me.lomin.spectree/each+>>
+             (cons 'me.lomin.alive.core/tree+>>
+                   (cons 'com.rpl.specter/transform
+                         body)))
+
+           (defmacro transform2 [& body]
+             (cons 'me.lomin.alive.core/each+>>
                    (cons 'com.rpl.specter/transform
                          body)))
 
            (defmacro defsnippet [name params snippet selector & body]
-             (let [each-selector (make-each-selector selector)]
+             (let [tree-selector (alive-macros/tree-or-html-selector* selector)]
                `(def ~name
                   (fn ~params
-                    (me.lomin.spectree/each+>> com.rpl.specter/transform
-                                               ~@body
-                                               (com.rpl.specter/select-first ~each-selector
-                                                                             ~snippet))))))
+                    (me.lomin.alive.core/tree+>> com.rpl.specter/transform
+                                                 ~@body
+                                                 (com.rpl.specter/select-first ~tree-selector
+                                                                               ~snippet))))))
+
+           (def MAYBE-ALL (specter/comp-paths seqable? specter/ALL))
+           (def SECOND (specter/nthpath 1))
 
            (defmacro clone-for
-             ([bind-expr selector transformation node]
-              `((clone-for ~bind-expr ~selector ~transformation) ~node))
-             ([[bind expr] selector transformation]
-              (let [each-selector (make-each-selector selector)]
-                `(fn clone-for*#
-                   ([node#]
-                    (clone-for*# ~expr
-                                 (com.rpl.specter/select-first ~each-selector node#)
-                                 nil
-                                 node#))
-                   ([expr# child# insert# node#]
-                    (if-let [~bind (first expr#)]
-                      (recur (rest expr#)
-                             child#
-                             me.lomin.alive.core/insert-after
-                             ((or insert# me.lomin.alive.core/insert-at)
-                               (~transformation child#)
-                               ~each-selector
-                               node#))
-                      node#)))))))
+             ([bind-expr selector transformation]
+              (list 'me.lomin.alive/clone-for bind-expr selector transformation nil))
+             ([[bind expr] selector transformation node]
+              (let [sel* (alive-macros/each* selector)
+                    seq-f (list 'fn [bind] transformation)]
+                (cons 'me.lomin.alive/transform2
+                      (cons [(list 'com.rpl.specter/putval expr)
+                             (list 'com.rpl.specter/putval sel*)
+                             (list 'com.rpl.specter/putval seq-f)
+                             (list 'me.lomin.spectree.tree-search/selector ['me.lomin.alive/MAYBE-ALL sel*])
+                             (list 'com.rpl.specter/collect ['com.rpl.specter/INDEXED-VALS ('com.rpl.specter/selected? ['me.lomin.alive/SECOND sel*]) 'com.rpl.specter/FIRST])]
+                            (cons 'me.lomin.alive.core/clone
+                                  (when node (list node)))))))))
 
    :cljs (do
 
@@ -150,4 +146,4 @@
              (fn [_] (vec args)))))
 
 (defn select [selector dom]
-  (specter/select (alive-core/each selector) dom))
+  (specter/select (alive-core/tree selector) dom))

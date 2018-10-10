@@ -25,7 +25,7 @@
                    (map #(str/replace % "\n" " ")
                         (enlive/emit* (remove-string-blank dom))))))
 
-(deftest template-test
+(deftest ^:unit template-test
   '({:data ["html" nil nil], :type :dtd}
     {:attrs   {:lang "de"}
      :content ("\n"
@@ -79,7 +79,7 @@
           [:div {} [:p {} "I am a snippet!"]]]
          alive-snippet)))
 
-(deftest render-fn-test
+(deftest ^:unit render-fn-test
   (is (string? (enlive-render enlive-template)))
   (is (string? (alive/render alive-template)))
   (is (= "<html lang=\"de\"><head><meta charset=\"utf-8\"><link href=\"\" rel=\"stylesheet\"><script src=\"src\" type=\"text/javascript\"></script><script src=\"\" type=\"text/javascript\"></script><title>This is a title placeholder</title></head><body class=\"body-class\"><div><p class=\"p-class\">I am a snippet!</p></div></body></html>"
@@ -93,7 +93,7 @@
   [:div] (alive/add-class x)
   [:p :./p-class] (alive/add-class "willi"))
 
-(deftest alive-snippet-test
+(deftest ^:unit alive-snippet-test
   (is (= "<body class=\"body-class\"><div class=\"!!!\"><p class=\"p-class willi\">I am a snippet!</p></div></body>"
          (alive/render (alive-add-classes-snippet "!!!"))
          (alive/render (alive-add-classes-snippet "!!!"))
@@ -108,7 +108,7 @@
   [:div] (alive/append "test-append")
   [:p :./p-class] (alive/content (str "test-content" x)))
 
-(deftest snippet-0-test
+(deftest ^:unit snippet-0-test
   (is (= "<body class=\"body-class\"><div><p class=\"p-class\">test-content!!!</p>test-append</div></body>"
          (enlive-render (enlive-snippet-0 "!!!"))
          (alive/render (alive-snippet-0 "!!!")))))
@@ -121,7 +121,7 @@
   [:body] (alive/set-attr :key "value")
   [:div] (alive/set-attr "key" "value"))
 
-(deftest enlive-snippet-1-test
+(deftest ^:unit enlive-snippet-1-test
   (is (= "<body class=\"body-class\" key=\"value\"><div key=\"value\"><p class=\"p-class\">I am a snippet!</p></div></body>"
          (enlive-render (enlive-snippet-1))
          (alive/render (alive-snippet-1)))))
@@ -135,7 +135,7 @@
   [:div] (alive/clone-for [i (range 3)]
                           [:p] (alive/content (str "I am #" i))))
 
-(deftest ^:unit clone-for-test
+(deftest ^:focused clone-for-test
   (testing "there are slight differences for clone-for in selector usage, but output is the same"
     (is (= (enlive-render (enlive-clone-for-snippet))
            (alive/render (alive-clone-for-snippet))))
