@@ -135,7 +135,7 @@
   [:div] (alive/clone-for [i (range 3)]
                           [:p] (alive/content (str "I am #" i))))
 
-(deftest ^:focused clone-for-test
+(deftest ^:unit clone-for-test
   (testing "there are slight differences for clone-for in selector usage, but output is the same"
     (is (= (enlive-render (enlive-clone-for-snippet))
            (alive/render (alive-clone-for-snippet))))

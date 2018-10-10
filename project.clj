@@ -7,7 +7,6 @@
                  [org.clojure/clojurescript "1.10.339"]
                  [com.rpl/specter "1.1.1"]
                  [hiccup "1.0.5"]
-                 [me.lomin/spectree "0.2.0"]
                  [hickory "0.7.1"]]
 
   :test-selectors {:default   (constantly true)

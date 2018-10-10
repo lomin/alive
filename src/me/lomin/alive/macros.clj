@@ -1,26 +1,39 @@
 (ns me.lomin.alive.macros)
 
-(defn each* [arg]
+(defn decorate* [arg]
   (cond
-    (keyword? arg) (list 'me.lomin.spectree.keyword/each arg)
-    (vector? arg) (mapv each* arg)
+    (keyword? arg) (list 'me.lomin.alive.core/decorate arg)
+    (vector? arg) (mapv decorate* arg)
     :else arg))
 
-(defn tree* [arg]
+(defn walk* [arg]
   (cond
-    (keyword? arg) (list 'me.lomin.spectree.tree-search/selector
-                         (list 'me.lomin.spectree.keyword/each arg))
-    (vector? arg) (mapv tree* arg)
+    (keyword? arg) (list 'me.lomin.alive.core/walk arg)
+    (vector? arg) (mapv walk* arg)
     :else arg))
 
-(defn tree-or-html-selector* [arg]
-  (let [selector (tree* arg)]
+(defn walk-or-html-selector* [arg]
+  (let [selector (walk* arg)]
     (if (= selector [])
-      (tree* :html)
+      (walk* :html)
       selector)))
 
-(defmacro each [arg]
-  (each* arg))
+(defn pairs
+  ([args] (pairs [] nil args))
+  ([pairs spare args]
+   (if-let [x0 (first args)]
+     (if-let [x1 (second args)]
+       (recur (conj pairs [x0 x1]) spare (nnext args))
+       [pairs x0])
+     [pairs spare])))
 
-(defmacro tree [arg]
-  (tree* arg))
+(defn +>>* [selector-wrapper f args]
+  (let [[selector-transformation-pair coll] (pairs args)
+        selector+transformer (for [[selector transformation] selector-transformation-pair]
+                               (list f
+                                     (selector-wrapper selector)
+                                     transformation))]
+    (if coll
+      (concat (list '->> coll) selector+transformer)
+      (let [sym (gensym)]
+        (list 'fn [sym] (+>>* selector-wrapper f (concat args [sym])))))))

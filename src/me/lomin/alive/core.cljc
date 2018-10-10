@@ -1,32 +1,20 @@
 (ns me.lomin.alive.core
   (:require [com.rpl.specter :as specter]
-            #?(:clj [me.lomin.alive.macros :as alive-macros])
-            [me.lomin.spectree.keyword :as spectree-keyword]
-            [me.lomin.spectree.tree-search :as tree-search]
             [clojure.string :as string]
-            [hickory.core :as hiccup])
-  #?(:cljs (:require-macros me.lomin.alive.core)))
+            [hickory.core :as hiccup]
+            [me.lomin.alive.selectors :as alive-selectors]))
 
-(defn each [selector]
+(defn decorate [selector]
   (cond
-    (keyword? selector) (spectree-keyword/each selector)
-    (vector? selector) (mapv each selector)
-    :else selector))
+    (keyword? selector) (alive-selectors/keyword-selector selector)
+    (vector? selector) (mapv decorate selector)
+    :else selector) )
 
-(defn tree [selector]
+(defn walk [selector]
   (cond
-    (keyword? selector) (tree-search/selector (spectree-keyword/each selector))
-    (vector? selector) (mapv tree selector)
+    (keyword? selector) (alive-selectors/walker (decorate selector))
+    (vector? selector) (mapv walk selector)
     :else selector))
-
-(defn pairs
-  ([args] (pairs [] nil args))
-  ([pairs spare args]
-   (if-let [x0 (first args)]
-     (if-let [x1 (second args)]
-       (recur (conj pairs [x0 x1]) spare (nnext args))
-       [pairs x0])
-     [pairs spare])))
 
 #?(:clj
    (do
@@ -48,27 +36,7 @@
                                     (line-seq rdr)))))
            (parser)
            (hiccup/as-hiccup)
-           (tag)))
-
-     (defn- +>>* [selector-wrapper f args]
-       (let [[selector-transformation-pair coll] (pairs args)
-             selector+transformer (for [[selector transformation] selector-transformation-pair]
-                                    (list f
-                                          (selector-wrapper selector)
-                                          transformation))]
-         (if coll
-           (concat (list '->> coll) selector+transformer)
-           (let [sym (gensym)]
-             (list 'fn [sym] (+>>* selector-wrapper f (concat args [sym])))))))
-
-     (defmacro each+>> [f & args]
-       (+>>* alive-macros/each* f args))
-
-     (defmacro tree+>> [f & args]
-       (+>>* alive-macros/tree* f args))
-
-     (defmacro +>> [f & args]
-       (+>>* identity f args))))
+           (tag)))))
 
 (def TAG 0)
 (def ATTRS 1)
@@ -98,50 +66,20 @@
                   val
                   node))
 
-(defn clone*
-  ([{:keys [insert expr last-index f child] :as context} node]
-   (if-let [x (first expr)]
-     (recur (-> context
-                (update :expr rest)
-                (assoc :last-index (inc last-index))
-                (assoc :insert insert-after-index))
-            (insert ((f x) child) last-index node))
-     node)))
+(defn clone* [{:keys [insert expr last-index f child] :as context} node]
+  (if-let [x (first expr)]
+    (recur (-> context
+               (update :expr rest)
+               (assoc :last-index (inc last-index))
+               (assoc :insert insert-after-index))
+           (insert ((f x) child) last-index node))
+    node))
 
-(defn clone
-  ([expr selector f indexes node]
-   (clone* {:insert      insert-at-index
-             :expr       expr
-             :child      (specter/select-first [specter/ALL (me.lomin.alive.core/each selector)]
-                                               node)
-             :last-index (last indexes)
-             :f          f}
-           node)))
-
-(defn tag= [t]
-  (specter/comp-paths seqable? (specter/selected? [specter/FIRST (specter/pred= t)])))
-
-(defmethod spectree-keyword/selector nil [ns k ns+k]
-  (tag= k))
-
-(defmethod spectree-keyword/selector :. [ns k ns+k]
-  [seqable? #(if-let [class-str (:class (second %))]
-               (some #{(name k)}
-                     (string/split class-str #" ")))])
-
-(defmethod spectree-keyword/selector :# [ns k ns+k]
-  [seqable? #(= (name k) (:id (second %)))])
-
-(defmethod spectree-keyword/selector :> [ns k ns+k]
-  (tag= k))
-
-(defmethod spectree-keyword/selector :>. [ns k ns+k]
-  [seqable? #(if-let [class-str (:class (second %))]
-               (some #{(name k)}
-                     (string/split class-str #" ")))])
-
-(defmethod spectree-keyword/selector :># [ns k ns+k]
-  [seqable? #(= (name k) (:id (second %)))])
-
-(defmethod spectree-keyword/selector :key [_ k _]
-  (specter/must k))
+(defn clone [expr selector f indexes node]
+  (clone* {:insert     insert-at-index
+           :expr       expr
+           :child      (specter/select-first [specter/ALL (decorate selector)]
+                                             node)
+           :last-index (last indexes)
+           :f          f}
+          node))

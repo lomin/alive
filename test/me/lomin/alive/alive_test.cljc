@@ -2,8 +2,7 @@
   (:require [me.lomin.alive.core :as alive.core]
             [me.lomin.alive :as alive]
             [com.rpl.specter :as specter]
-            [clojure.test :refer [deftest is testing]]
-            [me.lomin.alive.core :as alive-core]))
+            [clojure.test :refer [deftest is testing]]))
 
 (def template (alive/load-template-from-path "html-snippet.html"))
 
@@ -38,7 +37,7 @@
           {:class "new-class", :id "Question1"}
           [:div {:class "question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform [(alive.core/each :#/Question1)]
+         (time (specter/transform [(alive.core/decorate :#/Question1)]
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -46,7 +45,7 @@
           {:class "new-class", :id "Question1"}
           [:div {:class "question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/each [:#/Question1])
+         (time (specter/transform (alive.core/decorate [:#/Question1])
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -54,7 +53,7 @@
           {:id "Question1"}
           [:div {:class "new-class question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/tree [:./question])
+         (time (specter/transform (alive.core/walk [:./question])
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -62,7 +61,7 @@
           {:class "new-class", :id "Question1"}
           [:div {:class "question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/each [:article])
+         (time (specter/transform (alive.core/decorate [:article])
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -70,7 +69,7 @@
           {:id "Question1"}
           [:div {:class "new-class question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/tree [:article :./question])
+         (time (specter/transform (alive.core/walk [:article :./question])
                                   (alive/add-class "new-class")
                                   test-article)))))
 
