@@ -9,18 +9,12 @@
                  [hiccup "1.0.5"]
                  [hickory "0.7.1"]]
 
-  :test-selectors {:default   (constantly true)
-                   :unit      :unit
-                   :focused   :focused
-                   :all       (constantly true)}
+  :test-selectors {:default (constantly true)
+                   :unit    :unit
+                   :focused :focused
+                   :all     (constantly true)}
 
-  :cljsbuild {:builds
-              [{:id           "test"
-                :source-paths ["src" "test"]
-                :compiler     {:output-to    "target/test.js"
-                               :main         me.lomin.alive.doo-runner}}]}
-  :profiles {:dev {:plugins [[lein-doo "0.1.10"]]
-                   :dependencies [[enlive "1.1.6"]]}
-             :test {:resource-paths ["test-resources"]}}
-  :doo {:build "test"})
+  :profiles {:dev  {:resource-paths ["test-resources"]
+                    :dependencies   [[thheller/shadow-cljs "2.6.13"]]}
+             :test {:dependencies [[enlive "1.1.6"]]}})
 

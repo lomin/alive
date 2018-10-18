@@ -1,7 +1,5 @@
 (ns me.lomin.alive.selectors-test
-  (:require [me.lomin.alive.core :as alive.core]
-            [me.lomin.alive :as alive]
-            [com.rpl.specter :as specter]
+  (:require [me.lomin.alive :as alive]
             [clojure.test :refer [deftest is testing]]))
 
 (def template (alive/load-template-from-path "html-for-selectors-test.html"))

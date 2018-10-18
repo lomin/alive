@@ -3,6 +3,7 @@
             [clojure.string :as string]))
 
 (def SECOND (specter/nthpath 1))
+(def MAYBE-ALL (specter/comp-paths seqable? specter/ALL))
 
 (def walker
   (specter/recursive-path [path]

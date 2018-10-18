@@ -1,0 +1,8 @@
+{:lein   true
+ :builds {:test      {:target   :browser-test
+                      :test-dir "out/public/js/test"
+                      :devtools {:http-port 8021
+                                 :http-root "out/public/js/test"}}
+          :test-node {:target    :node-test
+                      :output-to "out/node-tests.js"
+                      :autorun   true}}}

@@ -1,8 +1,8 @@
 (ns me.lomin.alive.core
+  (:refer-clojure :exclude [clone])
   (:require [com.rpl.specter :as specter]
-            [clojure.string :as string]
-            [hickory.core :as hiccup]
-            [me.lomin.alive.selectors :as alive-selectors]))
+            [me.lomin.alive.selectors :as alive-selectors]
+            #?(:clj [hickory.core :as hickory])))
 
 (defn decorate [selector]
   (cond
@@ -37,7 +37,7 @@
                                (map clojure.string/trim-newline
                                     (line-seq rdr)))))
            (parser)
-           (hiccup/as-hiccup)
+           (hickory/as-hiccup)
            (tag)))))
 
 (def TAG 0)

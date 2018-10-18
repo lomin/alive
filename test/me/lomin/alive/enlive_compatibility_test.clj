@@ -133,7 +133,11 @@
 
 (alive/defsnippet alive-clone-for-snippet [] alive-template [:body]
   [:div] (alive/clone-for [i (range 3)]
-                          [:p] (alive/content (str "I am #" i))))
+                          :p (alive/content (str "I am #" i))))
+
+(alive/defsnippet alive-clone-for-snippet2 [] alive-template [:body]
+  [:div] (alive/clone-for [i (range 3)]
+                          :p (alive/content (str "I am #" i))))
 
 (deftest ^:unit clone-for-test
   (testing "there are slight differences for clone-for in selector usage, but output is the same"
@@ -144,4 +148,7 @@
            (time (enlive-render (enlive-clone-for-snippet)))))
 
     (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
-           (time (alive/render (alive-clone-for-snippet)))))))
+           (time (alive/render (alive-clone-for-snippet)))))
+
+    (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
+           (time (alive/render (alive-clone-for-snippet2)))))))
