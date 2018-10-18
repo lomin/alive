@@ -57,7 +57,7 @@
              (comp #(clojure.string/join " " (sort (vec %)))
                    f
                    make-set-from-str)))
-
+clojure.walk/prewalk
 (defn insert-after-index [val index node]
   (specter/setval (specter/before-index index)
                   val

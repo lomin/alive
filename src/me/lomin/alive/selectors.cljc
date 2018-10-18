@@ -2,6 +2,8 @@
   (:require [com.rpl.specter :as specter]
             [clojure.string :as string]))
 
+(def SECOND (specter/nthpath 1))
+
 (def walker
   (specter/recursive-path [path]
                           p
@@ -14,42 +16,58 @@
                                                               (specter/continue-then-stay specter/MAP-VALS p)
                                                               [specter/MAP-VALS p]))))
 
-(defmulti keyword-selector (fn [k] (keyword (namespace k))) :default ::none)
+(defmulti keyword-selector (fn [k] (keyword (namespace k))) :default ::tag)
 
-(defmethod keyword-selector ::none [k] [identity k])
-(defmethod keyword-selector :must [k] [walker (specter/must (keyword (name k)))])
 
-(defn tag= [t]
-  (specter/comp-paths seqable? (specter/selected? [specter/FIRST (specter/pred= t)])))
 
-(defmethod keyword-selector nil [k]
-  [walker
-   (tag= k)])
+;; tags
+(defn tag= [tag]
+  (specter/comp-paths indexed?
+                      (specter/selected? [specter/FIRST
+                                          (specter/pred= (keyword (name tag)))])))
 
-(defmethod keyword-selector :. [k]
-  [walker
-   [seqable? #(if-let [class-str (:class (second %))]
-                (some #{(name k)}
-                      (string/split class-str #" ")))]])
-
-(defmethod keyword-selector :# [k]
-  [walker
-   [seqable? #(= (name k) (:id (second %)))]])
+(defmethod keyword-selector ::tag [k]
+  [walker (tag= k)])
 
 (defmethod keyword-selector :> [k]
   [identity
-   (tag= (keyword (name k)))])
+   [seqable? specter/ALL (tag= k)]])
+
+; classes
+(defn class= [class]
+  (specter/comp-paths indexed?
+                      (specter/selected? [SECOND
+                                          (specter/must :class)
+                                          #(some #{(name class)}
+                                                 (string/split % #" "))])))
+
+(defmethod keyword-selector :. [k]
+  [walker (class= k)])
 
 (defmethod keyword-selector :>. [k]
   [identity
-   [seqable? #(if-let [class-str (:class (second %))]
-                (some #{(name k)}
-                      (string/split class-str #" ")))]])
+   [seqable? specter/ALL (class= k)]])
+
+(defmethod keyword-selector :&. [k]
+  [identity (class= k)])
+
+; ids
+(defn id= [id]
+  (specter/comp-paths indexed?
+                      (specter/selected? [SECOND
+                                          (specter/must :id)
+                                          (specter/pred= (name id))])))
+
+(defmethod keyword-selector :# [k]
+  [walker (id= k)])
 
 (defmethod keyword-selector :># [k]
   [identity
-   [seqable? #(= (name k) (:id (second %)))]])
+   [seqable? specter/ALL (id= k)]])
 
-(defmethod keyword-selector :key [k]
-  [walker
-   (specter/must (keyword (name k)))])
+(defmethod keyword-selector :&# [k]
+  [identity (class= k)])
+
+; map-key
+(defmethod keyword-selector :must [k]
+  [identity (specter/must (keyword (name k)))])

@@ -9,15 +9,7 @@
 (deftest ^:unit select-snippet-test
   (is (= [:me.lomin.alive/document
           [[:html {} [:head {}] [:body {} [:div {} [:p {} "I am a snippet!"]]]]]]
-         template))
-  (is (= [[:div {} [:p {} "I am a snippet!"]]]
-         (alive/select [:div] template)))
-  (is (= []
-         (alive/select [:>/div] template)))
-  (is (= [[:div {:class "test"} [:p {} "I am a snippet!"]]]
-         (alive/select [:>/div] [:div {:class "test"} [:p {} "I am a snippet!"]])))
-  (is (= [[:div {:class "test"} [:p {} "I am a snippet!"]]]
-         (alive/select [:>./test] [:div {:class "test"} [:p {} "I am a snippet!"]]))))
+         template)))
 
 (deftest ^:unit add-class-test
   (is (= [:div {:class "c0 c1 c2 c3"}]
@@ -113,7 +105,7 @@
   (testing "transform macro test"
     (is (= {:a 6 :b 4 :c {:d 6 :e 4 :f [0 2 2]}}
            ((alive/transform2
-              [:key/a] inc
+              [:must/a] inc
               [(alive/map-key :c)] (alive/transform
                                      [(alive/map-key :d)] inc
                                      [(alive/map-key :e)] dec
