@@ -8,18 +8,12 @@
 (def walker
   (specter/recursive-path [path]
                           p
-                          (specter/cond-path sequential?
+                          (specter/if-path sequential?
                                              (specter/if-path path
                                                               (specter/continue-then-stay specter/ALL p)
-                                                              [specter/ALL p])
-                                             map?
-                                             (specter/if-path path
-                                                              (specter/continue-then-stay specter/MAP-VALS p)
-                                                              [specter/MAP-VALS p]))))
+                                                              [specter/ALL p]))))
 
 (defmulti keyword-selector (fn [k] (keyword (namespace k))) :default ::tag)
-
-
 
 ;; tags
 (defn tag= [tag]
@@ -32,7 +26,7 @@
 
 (defmethod keyword-selector :> [k]
   [identity
-   [seqable? specter/ALL (tag= k)]])
+   [MAYBE-ALL (tag= k)]])
 
 ; classes
 (defn class= [class]
@@ -46,8 +40,7 @@
   [walker (class= k)])
 
 (defmethod keyword-selector :>. [k]
-  [identity
-   [seqable? specter/ALL (class= k)]])
+  [identity [MAYBE-ALL (class= k)]])
 
 (defmethod keyword-selector :&. [k]
   [identity (class= k)])
@@ -63,12 +56,14 @@
   [walker (id= k)])
 
 (defmethod keyword-selector :># [k]
-  [identity
-   [seqable? specter/ALL (id= k)]])
+  [identity [MAYBE-ALL (id= k)]])
 
 (defmethod keyword-selector :&# [k]
   [identity (class= k)])
 
 ; map-key
+(defn must [k]
+  (specter/must k))
+
 (defmethod keyword-selector :must [k]
-  [identity (specter/must (keyword (name k)))])
+  [identity (must (keyword (name k)))])

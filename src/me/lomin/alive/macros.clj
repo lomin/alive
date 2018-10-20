@@ -1,11 +1,5 @@
 (ns me.lomin.alive.macros)
 
-(defn decorate* [arg]
-  (cond
-    (keyword? arg) (list 'me.lomin.alive.core/decorate arg)
-    (vector? arg) (mapv decorate* arg)
-    :else arg))
-
 (defn walk* [arg]
   (cond
     (keyword? arg) (list 'me.lomin.alive.core/walk arg)

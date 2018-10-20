@@ -3,12 +3,15 @@
             [me.lomin.alive :as alive]
             [net.cgrand.enlive-html :as enlive]
             [clojure.walk :as walk]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [me.lomin.alive.core :as alive-core]))
 
 (def template-file "html-template.html")
+(def clone-template-file "html-for-clone-test.html")
 (def snippet-file "html-snippet.html")
 
 (def alive-template (alive/load-template-from-path template-file))
+(def alive-clone-template (alive/load-template-from-path clone-template-file))
 (def alive-snippet (alive/load-snippet-from-path snippet-file))
 (def enlive-template (enlive/html-resource template-file))
 
@@ -126,29 +129,114 @@
          (enlive-render (enlive-snippet-1))
          (alive/render (alive-snippet-1)))))
 
-(enlive/defsnippet enlive-clone-for-snippet template-file [:body] []
-  [:div :p]
+(declare enlive-clone-for-snippet)
+(enlive/defsnippet enlive-clone-for-snippet clone-template-file [:body] []
+  [:div :li :div]
   (enlive/clone-for [i (range 3)]
-                    [:p] (enlive/content (str "I am #" i))))
+                    [:p] (enlive/content (str "I am #" i))
+                    [:a] (enlive/content (str "I am link #" i))))
 
-(alive/defsnippet alive-clone-for-snippet [] alive-template [:body]
-  [:div] (alive/clone-for [i (range 3)]
-                          :p (alive/content (str "I am #" i))))
+(alive/defsnippet alive-clone-for-snippet [] alive-clone-template [:body]
+  [:div :li] (alive/clone-for [i (range 3)]
+                              :div
+                              :p (alive/content (str "I am #" i))
+                              :a (alive/content (str "I am link #" i))))
 
-(alive/defsnippet alive-clone-for-snippet2 [] alive-template [:body]
-  [:div] (alive/clone-for [i (range 3)]
-                          :p (alive/content (str "I am #" i))))
+(alive/defsnippet alive-clone-for-snippet2 [] alive-clone-template [:body]
+  [:div :li] (alive/clone-for [i (range 3)]
+                              :>/div
+                              :>/p (alive/content (str "I am #" i))
+                              :>/a (alive/content (str "I am link #" i))))
+
+(deftest ^:unit clone-test
+  (is (= [:li
+          {}
+          [:div {} "before"]
+          [:div {} "before"]
+          [:div {} "before"]
+          [:div {} [:p {:class "p-class"} "Hi #0"]]
+          [:div {} [:p {:class "p-class"} "Hi #1"]]
+          [:div {} [:p {:class "p-class"} "Hi #2"]]
+          [:div {} "after"]
+          [:div {} "after"]
+          [:div {} "after"]]
+         (alive-core/clone '(0 1 2)
+                           (fn [i] (alive/transform :p (alive/content (str "Hi #" i))))
+                           [[2 [:div {} "before"]]
+                            [3 [:div {} [:p {:class "p-class"} "I am a snippet!"]]]
+                            [4 [:div {} "after"]]]
+                           [:li {} [:div {} "before"]
+                            [:div {}
+                             [:p {:class "p-class"} "I am a snippet!"]]
+                            [:div {} "after"]]))))
 
 (deftest ^:unit clone-for-test
-  (testing "there are slight differences for clone-for in selector usage, but output is the same"
-    (is (= (enlive-render (enlive-clone-for-snippet))
-           (alive/render (alive-clone-for-snippet))))
 
-    (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
-           (time (enlive-render (enlive-clone-for-snippet)))))
+  (testing "enlive/clone-for is the reference"
+    (is (= "<body class=\"body-class\"><div><a class=\"link link1\" href=\"/?i=1\">I am link #1!</a><ul><li><div>before</div><div>before</div><div>before</div><div><a id=\"link2\" class=\"link link2\" href=\"/?i=2\">I am link #0</a><p class=\"p-class\">I am #0</p></div><div><a id=\"link2\" class=\"link link2\" href=\"/?i=2\">I am link #1</a><p class=\"p-class\">I am #1</p></div><div><a id=\"link2\" class=\"link link2\" href=\"/?i=2\">I am link #2</a><p class=\"p-class\">I am #2</p></div><div>after</div><div>after</div><div>after</div></li></ul></div></body>"
+           (time (enlive-render (enlive-clone-for-snippet))))))
 
-    (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
-           (time (alive/render (alive-clone-for-snippet)))))
+  (testing "alive/clone-for"
+    (is (= [:body
+            {:class "body-class"}
+            [:div
+             {}
+             [:a {:class "link link1", :href "/?i=1"} "I am link #1!"]
+             [:ul
+              {}
+              [:li
+               {}
+               [:div {} "before"]
+               [:div {} "before"]
+               [:div {} "before"]
+               [:div
+                {}
+                [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #0"]
+                [:p {:class "p-class"} "I am #0"]]
+               [:div
+                {}
+                [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #1"]
+                [:p {:class "p-class"} "I am #1"]]
+               [:div
+                {}
+                [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #2"]
+                [:p {:class "p-class"} "I am #2"]]
+               [:div {} "after"]
+               [:div {} "after"]
+               [:div {} "after"]]]]]
+           (alive-clone-for-snippet)
+           (alive-clone-for-snippet2)))))
 
-    (is (= "<body class=\"body-class\"><div><p class=\"p-class\">I am #0</p><p class=\"p-class\">I am #1</p><p class=\"p-class\">I am #2</p></div></body>"
-           (time (alive/render (alive-clone-for-snippet2)))))))
+(deftest ^:unit clone-for-as-function-test
+  (is (= [:li
+          {}
+          [:div {} "before"]
+          [:div {} "before"]
+          [:div {} "before"]
+          [:div
+           {}
+           [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #0"]
+           [:p {:class "p-class"} "I am #0"]]
+          [:div
+           {}
+           [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #1"]
+           [:p {:class "p-class"} "I am #1"]]
+          [:div
+           {}
+           [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #2"]
+           [:p {:class "p-class"} "I am #2"]]
+          [:div {} "after"]
+          [:div {} "after"]
+          [:div {} "after"]]
+         (alive/clone-for [i (range 3)]
+                          :div
+                          :p (alive/content (str "I am #" i))
+                          :a (alive/content (str "I am link #" i))
+                          [:li
+                           {}
+                           [:div {} "before"]
+                           [:div
+                            {}
+                            [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #2!"]
+                            [:p {:class "p-class"} "I am a snippet!"]]
+                           [:div {} "after"]]))))

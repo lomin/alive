@@ -4,18 +4,18 @@
             [me.lomin.alive.selectors :as alive-selectors]
             #?(:clj [hickory.core :as hickory])))
 
-(defn decorate [selector]
-  (cond
-    (keyword? selector) (let [[_ sel] (alive-selectors/keyword-selector selector)]
-                          sel)
-    (vector? selector) (mapv decorate selector)
-    :else selector))
-
 (defn walk [selector]
   (cond
     (keyword? selector) (let [[wrapper sel] (alive-selectors/keyword-selector selector)]
                           (wrapper sel))
     (vector? selector) (mapv walk selector)
+    :else selector))
+
+(defn walk-1 [selector]
+  (cond
+    (keyword? selector) (let [[_ sel] (alive-selectors/keyword-selector selector)]
+                          sel)
+    (vector? selector) (mapv walk-1 selector)
     :else selector))
 
 #?(:clj
@@ -57,7 +57,7 @@
              (comp #(clojure.string/join " " (sort (vec %)))
                    f
                    make-set-from-str)))
-clojure.walk/prewalk
+
 (defn insert-after-index [val index node]
   (specter/setval (specter/before-index index)
                   val
@@ -77,11 +77,19 @@ clojure.walk/prewalk
            (insert ((f x) child) last-index node))
     node))
 
-(defn clone [expr selector f indexes node]
-  (clone* {:insert     insert-at-index
-           :expr       expr
-           :child      (specter/select-first [specter/ALL (decorate selector)]
-                                             node)
-           :last-index (last indexes)
-           :f          f}
-          node))
+(defn clone
+  ([expr f indexes node]
+   (clone expr f indexes 0 node))
+  ([expr f indexes offset node]
+   (if-let [[i child] (first indexes)]
+     (recur expr
+            f
+            (rest indexes)
+            (+ offset (max 0 (dec (count expr))))
+            (clone* {:insert     insert-at-index
+                     :expr       expr
+                     :child      child
+                     :last-index (+ i offset)
+                     :f          f}
+                    node))
+     node)))

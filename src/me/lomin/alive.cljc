@@ -14,9 +14,6 @@
 (def SECOND me.lomin.alive.selectors/SECOND)
 (def MAYBE-ALL me.lomin.alive.selectors/MAYBE-ALL)
 
-(defn map-key [k]
-  (specter/must k))
-
 (defn add-class
   ([a-class] #(add-class a-class %))
   ([a-class node]
@@ -112,11 +109,6 @@
                                          'com.rpl.specter/transform
                                          body))
 
-           (defmacro transform2 [& body]
-             (me.lomin.alive.macros/+>>* alive-macros/decorate*
-                                         'com.rpl.specter/transform
-                                         body))
-
            (defmacro defsnippet [name params snippet selector & body]
              (let [tree-selector (alive-macros/walk-or-html-selector* selector)]
                `(def ~name
@@ -126,20 +118,19 @@
                       (com.rpl.specter/select-first ~tree-selector
                                                     ~snippet))))))
 
-           (defmacro clone-for
-             ([bind-expr selector transformation]
-              (list 'me.lomin.alive/clone-for bind-expr selector transformation nil))
-             ([[bind expr] selector transformation node]
-              (let [sel* (alive-macros/decorate* selector)
-                    seq-f (list 'fn [bind] transformation)]
-                (cons 'me.lomin.alive/transform2
-                      (cons [(list 'com.rpl.specter/putval expr)
-                             (list 'com.rpl.specter/putval sel*)
-                             (list 'com.rpl.specter/putval seq-f)
-                             (list 'me.lomin.alive.selectors/walker ['me.lomin.alive/MAYBE-ALL sel*])
-                             (list 'com.rpl.specter/collect ['com.rpl.specter/INDEXED-VALS ('com.rpl.specter/selected? ['me.lomin.alive/SECOND sel*]) 'com.rpl.specter/FIRST])]
-                            (cons 'me.lomin.alive.core/clone
-                                  (when node (list node)))))))))
+           (defmacro clone-for [[bind expr] parent-selector & selector+transformations&coll]
+             (let [[selector+transformations coll] (alive-macros/pairs selector+transformations&coll)
+                   walking-parent-selector (alive-macros/walk* parent-selector)
+                   seq-f (list 'fn [bind] (cons 'me.lomin.alive/transform (mapcat conj selector+transformations)))]
+               (cons 'me.lomin.alive/transform
+                     (cons [(list 'com.rpl.specter/putval expr)
+                            (list 'com.rpl.specter/putval seq-f)
+                            (list 'com.rpl.specter/selected? walking-parent-selector)
+                            (list 'com.rpl.specter/collect
+                                  ['com.rpl.specter/INDEXED-VALS
+                                   (list 'com.rpl.specter/selected? ['me.lomin.alive/SECOND (list 'com.rpl.specter/view 'vector) walking-parent-selector])])]
+                           (cons 'me.lomin.alive.core/clone
+                                 (when coll (list coll))))))))
 
    :cljs (do
 
@@ -148,3 +139,6 @@
 
 (defn select [selector dom]
   (specter/select (alive-core/walk selector) dom))
+
+(defn select-first [selector dom]
+  (specter/select-first (alive-core/walk selector) dom))

@@ -10,6 +10,20 @@
             [:a {:id "link2" :class "link link2", :href "/?i=2"} "I am link #2!"]]
            (alive/select [:div :a] template))))
 
+  (testing "css-selector: >div"
+    (is (= [[:div {} "before"]
+            [:div
+             {}
+             [:a {:class "link link2", :href "/?i=2", :id "link2"} "I am link #2!"]
+             [:p {:class "p-class"} "I am a snippet!"]]
+            [:div {} "after"]]
+           (alive/select :>/div
+                         [:li {}
+                          [:div {} "before"]
+                          [:div {}
+                           [:a {:id "link2", :class "link link2", :href "/?i=2"} "I am link #2!"]
+                           [:p {:class "p-class"} "I am a snippet!"]] [:div {} "after"]]))))
+
   (testing "css-selector: 'div>a'"
     (is (= [[:a {:class "link link1", :href "/?i=1"} "I am link #1!"]]
            (alive/select [:div :>/a] template))))

@@ -1,6 +1,7 @@
 (ns me.lomin.alive.alive-test
-  (:require [me.lomin.alive.core :as alive.core]
-            [me.lomin.alive :as alive]
+  (:require [me.lomin.alive :as alive]
+            [me.lomin.alive.core :as alive.core]
+            [me.lomin.alive.selectors :as alive-selectors]
             [com.rpl.specter :as specter]
             [clojure.test :refer [deftest is testing]]))
 
@@ -35,7 +36,7 @@
           {:class "new-class", :id "Question1"}
           [:div {:class "question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform [(alive.core/decorate :#/Question1)]
+         (time (specter/transform [(alive.core/walk-1 :#/Question1)]
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -43,7 +44,7 @@
           {:class "new-class", :id "Question1"}
           [:div {:class "question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/decorate [:#/Question1])
+         (time (specter/transform (alive.core/walk-1 [:#/Question1])
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -59,7 +60,7 @@
           {:class "new-class", :id "Question1"}
           [:div {:class "question"} " e.hmtl Q1 "]
           [:div {:class "answer"} " e.hmtl A1 "]]
-         (time (specter/transform (alive.core/decorate [:article])
+         (time (specter/transform (alive.core/walk-1 [:article])
                                   (alive/add-class "new-class")
                                   test-article))))
 
@@ -97,19 +98,19 @@
 
   (testing "transforms within nested structures"
     (is (= [:div {:class "question", :l0 {:l1 2}} "test"]
-           (alive/transform [:./question alive/ATTRS (alive/map-key :l0) (alive/map-key :l1)]
+           (alive/transform [:./question alive/ATTRS (alive-selectors/must :l0) (alive-selectors/must :l1)]
                             inc
                             [:div {:class "question" :l0 {:l1 1}} "test"])))))
 
 (deftest ^:unit transform-macro-test
   (testing "transform macro test"
     (is (= {:a 6 :b 4 :c {:d 6 :e 4 :f [0 2 2]}}
-           ((alive/transform2
+           ((alive/transform
               [:must/a] inc
-              [(alive/map-key :c)] (alive/transform
-                                     [(alive/map-key :d)] inc
-                                     [(alive/map-key :e)] dec
-                                     [(alive/map-key :f)] (alive/transform
+              [(alive-selectors/must :c)] (alive/transform
+                                  [(alive-selectors/must :d)] inc
+                                  [(alive-selectors/must :e)] dec
+                                  [(alive-selectors/must :f)] (alive/transform
                                                             1 inc))
-              [(alive/map-key :b)] dec)
+              [(alive-selectors/must :b)] dec)
              {:a 5 :b 5 :c {:d 5 :e 5 :f [0 1 2]}})))))
