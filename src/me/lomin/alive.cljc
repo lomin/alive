@@ -132,7 +132,13 @@
 
    :cljs (do
 
-           (defn make-component [& args]
+           (defn insert-component
+             ([component]
+              (fn [node] [component node]))
+             ([component & args]
+              (fn [node] (conj (into [component] args) node))))
+
+           (defn insert-snippet [& args]
              (fn [_] (vec args)))))
 
 (defn select [selector dom]

@@ -11,10 +11,14 @@
 (def walker
   (specter/recursive-path [path]
                           p
-                          (specter/if-path sequential?
+                          (specter/cond-path sequential?
                                              (specter/if-path path
                                                               (specter/continue-then-stay specter/ALL p)
-                                                              [specter/ALL p]))))
+                                                              [specter/ALL p])
+                                             map?
+                                             (specter/if-path path
+                                                              (specter/continue-then-stay specter/MAP-VALS p)
+                                                              [specter/MAP-VALS p]))))
 
 (defmulti keyword-selector (fn [k] (keyword (namespace k))) :default ::tag)
 
@@ -72,3 +76,6 @@
 
 (defmethod keyword-selector :must [k]
   [identity (must (keyword (name k)))])
+
+(defn with-attr= [attr]
+  (walker (must attr)))
