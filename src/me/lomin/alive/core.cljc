@@ -1,22 +1,21 @@
 (ns me.lomin.alive.core
   (:refer-clojure :exclude [clone])
   (:require [com.rpl.specter :as specter]
-            [me.lomin.alive.selectors :as alive-selectors]
+            [me.lomin.alive.selectors :refer [TAG ATTRS CONTENT] :as alive-selectors]
             #?(:clj [hickory.core :as hickory])))
 
-(defn walk [selector]
+(defn- walk* [walk-f wrapper-f selector]
   (cond
     (keyword? selector) (let [[wrapper sel] (alive-selectors/keyword-selector selector)]
-                          (wrapper sel))
-    (vector? selector) (mapv walk selector)
+                          (wrapper-f wrapper sel))
+    (vector? selector) (mapv walk-f selector)
     :else selector))
 
+(defn walk [selector]
+  (walk* walk (fn [wrapper sel] (wrapper sel)) selector))
+
 (defn walk-1 [selector]
-  (cond
-    (keyword? selector) (let [[_ sel] (alive-selectors/keyword-selector selector)]
-                          sel)
-    (vector? selector) (mapv walk-1 selector)
-    :else selector))
+  (walk* walk-1 (fn [_ sel] sel) selector))
 
 #?(:clj
    (do
@@ -39,9 +38,6 @@
            (parser)
            (hickory/as-hiccup)
            (tag)))))
-
-(def TAG 0)
-(def ATTRS 1)
 
 (defn make-set-from-str [class-str]
   (if class-str

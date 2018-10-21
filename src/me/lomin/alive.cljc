@@ -1,17 +1,15 @@
 (ns me.lomin.alive
   (:require [me.lomin.alive.core :as alive-core]
-            [me.lomin.alive.selectors]
+            [me.lomin.alive.selectors :as alive-selectors]
             [com.rpl.specter :as specter]
             #?(:clj [me.lomin.alive.macros :as alive-macros])
             #?(:clj [hickory.core :as hickory])
             #?(:clj [hiccup.core :as hiccup]))
   #?(:cljs (:require-macros me.lomin.alive)))
 
-
-(def TAG alive-core/TAG)
-(def ATTRS alive-core/ATTRS)
-
-(def SECOND me.lomin.alive.selectors/SECOND)
+(def TAG alive-selectors/TAG)
+(def ATTRS alive-selectors/ATTRS)
+(def CONTENT alive-selectors/CONTENT)
 (def MAYBE-ALL me.lomin.alive.selectors/MAYBE-ALL)
 
 (defn add-class
@@ -120,7 +118,7 @@
 
            (defmacro clone-for [[bind expr] parent-selector & selector+transformations&coll]
              (let [[selector+transformations coll] (alive-macros/pairs selector+transformations&coll)
-                   walking-parent-selector (alive-macros/walk* parent-selector)
+                   walking-parent-selector (list 'me.lomin.alive.core/walk parent-selector)
                    seq-f (list 'fn [bind] (cons 'me.lomin.alive/transform (mapcat conj selector+transformations)))]
                (cons 'me.lomin.alive/transform
                      (cons [(list 'com.rpl.specter/putval expr)
@@ -128,7 +126,7 @@
                             (list 'com.rpl.specter/selected? walking-parent-selector)
                             (list 'com.rpl.specter/collect
                                   ['com.rpl.specter/INDEXED-VALS
-                                   (list 'com.rpl.specter/selected? ['me.lomin.alive/SECOND (list 'com.rpl.specter/view 'vector) walking-parent-selector])])]
+                                   (list 'com.rpl.specter/selected? [1 (list 'me.lomin.alive.core/walk-1 parent-selector)])])]
                            (cons 'me.lomin.alive.core/clone
                                  (when coll (list coll))))))))
 

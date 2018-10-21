@@ -2,6 +2,9 @@
   (:require [com.rpl.specter :as specter]
             [clojure.string :as string]))
 
+(def TAG 0)
+(def ATTRS 1)
+(def CONTENT 2)
 (def SECOND (specter/nthpath 1))
 (def MAYBE-ALL (specter/comp-paths seqable? specter/ALL))
 
@@ -25,13 +28,13 @@
   [walker (tag= k)])
 
 (defmethod keyword-selector :> [k]
-  [identity
-   [MAYBE-ALL (tag= k)]])
+  [(partial conj [MAYBE-ALL])
+   (tag= k)])
 
 ; classes
 (defn class= [class]
   (specter/comp-paths indexed?
-                      (specter/selected? [SECOND
+                      (specter/selected? [1
                                           (specter/must :class)
                                           #(some #{(name class)}
                                                  (string/split % #" "))])))
@@ -40,7 +43,8 @@
   [walker (class= k)])
 
 (defmethod keyword-selector :>. [k]
-  [identity [MAYBE-ALL (class= k)]])
+  [(partial conj [MAYBE-ALL])
+   (class= k)])
 
 (defmethod keyword-selector :&. [k]
   [identity (class= k)])
@@ -48,7 +52,7 @@
 ; ids
 (defn id= [id]
   (specter/comp-paths indexed?
-                      (specter/selected? [SECOND
+                      (specter/selected? [1
                                           (specter/must :id)
                                           (specter/pred= (name id))])))
 
@@ -56,7 +60,8 @@
   [walker (id= k)])
 
 (defmethod keyword-selector :># [k]
-  [identity [MAYBE-ALL (id= k)]])
+  [(partial conj [MAYBE-ALL])
+   (id= k)])
 
 (defmethod keyword-selector :&# [k]
   [identity (class= k)])
