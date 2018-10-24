@@ -3,6 +3,7 @@
             [me.lomin.alive.core :as alive.core]
             [me.lomin.alive.selectors :as alive-selectors]
             [com.rpl.specter :as specter]
+            [me.lomin.alive.reload]
             [clojure.test :refer [deftest is testing]]))
 
 (def template (alive/load-template-from-path "html-snippet.html"))

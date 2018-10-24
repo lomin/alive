@@ -1,8 +1,13 @@
-{:lein   true
+{:dependencies [[org.clojure/clojure "1.9.0"]
+                [org.clojure/clojurescript "1.10.339"]
+                [com.rpl/specter "1.1.1"]
+                [hiccup "1.0.5"]
+                [hickory "0.7.1"]]
+ :source-paths [".alive" "src" "test" "test-resources"]
  :builds {:test      {:target   :browser-test
                       :test-dir "out/public/js/test"
                       :devtools {:http-port 8021
                                  :http-root "out/public/js/test"}}
-          :test-node {:target    :node-test
+          :node-test {:target    :node-test
                       :output-to "out/node-tests.js"
                       :autorun   true}}}

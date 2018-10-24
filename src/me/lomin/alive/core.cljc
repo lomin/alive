@@ -1,6 +1,7 @@
 (ns me.lomin.alive.core
   (:refer-clojure :exclude [clone])
   (:require [com.rpl.specter :as specter]
+            [me.lomin.alive.reload]
             [me.lomin.alive.selectors :refer [TAG ATTRS CONTENT] :as alive-selectors]
             #?(:clj [hickory.core :as hickory])))
 
